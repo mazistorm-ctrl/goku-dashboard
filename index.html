@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>極〜GOKU〜 業務ダッシュボード</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <h1>🥩 極〜GOKU〜 原宿店</h1>
+      <p>業務ダッシュボード</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- 売上入力フォーム -->
+    <section class="card">
+      <h2>📝 日次売上入力</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="date">日付</label>
+          <input type="date" id="date">
+        </div>
+        <div class="form-group">
+          <label for="sales">売上金額（円）</label>
+          <input type="number" id="sales" placeholder="例：48000">
+        </div>
+        <div class="form-group">
+          <label for="customers">客数</label>
+          <input type="number" id="customers" placeholder="例：10">
+        </div>
+        <div class="form-group">
+          <label for="memo">メモ</label>
+          <input type="text" id="memo" placeholder="例：雨天・満席など">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveSales()">💾 保存する</button>
+    </section>
+
+    <!-- グラフ -->
+    <section class="card">
+      <h2>📊 売上推移グラフ（直近30日）</h2>
+      <canvas id="salesChart"></canvas>
+    </section>
+
+    <!-- 売上一覧 -->
+    <section class="card">
+      <div class="section-header">
+        <h2>📋 売上一覧</h2>
+        <button class="btn-secondary" onclick="exportCSV()">📥 CSVエクスポート</button>
+      </div>
+      <div class="table-wrap">
+        <table id="salesTable">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>売上金額</th>
+              <th>客数</th>
+              <th>客単価</th>
+              <th>メモ</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
