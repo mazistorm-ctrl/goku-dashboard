@@ -225,7 +225,11 @@
 
         <!-- じぶんのまとめ（自分マークベース） -->
         <section class="card">
-          <h2>じぶんのまとめ</h2>
+          <div class="section-header">
+            <h2>じぶんのまとめ</h2>
+            <select id="mySummarySelect" class="me-select" onchange="setMeFromSelect(this.value)"></select>
+          </div>
+          <p class="hint">自分の名前を選ぶと、同じ名前で参加したイベントが全部まとまるよ</p>
           <div id="myEvents"></div>
           <div id="myTotal" class="expense-total"></div>
         </section>

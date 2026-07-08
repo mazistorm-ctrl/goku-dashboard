@@ -551,6 +551,14 @@ select:focus {
   margin-bottom: 4px;
 }
 
+.me-select {
+  width: auto;
+  max-width: 55%;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 /* 割り方タブ */
 .split-tabs {
   display: flex;

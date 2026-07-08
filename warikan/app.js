@@ -78,10 +78,36 @@ function subscribeToCurrentEvent() {
 function loadStore() {
   const data = localStorage.getItem(STORAGE_KEY);
   const store = data ? JSON.parse(data) : { events: [], currentEventId: null };
-  // 「自分」マーク（イベントID→メンバーID）。端末内だけの情報で共有URLには乗らない
+  // 「自分」設定。端末内だけの情報で共有URLには乗らない。
+  // myName: この端末の持ち主の名前（一度決めれば同名メンバーのいる全イベントに適用）
+  // meMap: イベント個別の上書き（同名の別人がいるとき用の名残・後方互換）
   store.meMap = store.meMap || {};
+  // 旧データ（イベント個別マークのみ）→ グローバルなmyNameへ引き継ぐ
+  if (!store.myName) {
+    for (const ev of store.events) {
+      const mid = store.meMap[ev.id];
+      const m = mid && ev.members.find(m => m.id === mid);
+      if (m) {
+        store.myName = m.name;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); // 引き継ぎを永続化
+        break;
+      }
+    }
+  }
   store.events.forEach(migrateEvent);
   return store;
+}
+
+// このイベントでの「自分」メンバーを解決する。
+// 個別上書き(meMap)があればそれ、なければグローバルなmyNameと同名のメンバー
+function meMemberOf(ev) {
+  if (!ev) return null;
+  if (store.meMap[ev.id]) {
+    const m = ev.members.find(m => m.id === store.meMap[ev.id]);
+    if (m) return m;
+  }
+  if (store.myName) return ev.members.find(m => m.name === store.myName) || null;
+  return null;
 }
 
 // 古い形式のデータを補完する（日付なし記録・絵文字時代のメンバー・単独払い専用だった頃の記録）
@@ -272,33 +298,35 @@ function cycleColor(id) {
   renderAll();
 }
 
-// このイベントでの「自分」をマークする（もう一度タップで解除）
+// 名前をタップして「自分は◯◯」を設定（もう一度タップで解除）。
+// グローバル設定なので、同じ名前のメンバーがいるイベントは全部まとまる
 function toggleMe(id) {
   const ev = currentEvent();
-  if (store.meMap[ev.id] === id) {
-    delete store.meMap[ev.id];
+  const m = ev && ev.members.find(m => m.id === id);
+  if (!m) return;
+  delete store.meMap[ev.id];           // 個別上書きがあれば消して、名前基準に統一
+  if (store.myName === m.name) {
+    store.myName = null;
   } else {
-    store.meMap[ev.id] = id;
-    toast('じぶんに設定したよ。履歴タブに自分の使用額が集計される');
+    store.myName = m.name;
+    toast(`「${m.name}」をじぶんに設定したよ。同じ名前の他のイベントもまとまるよ`);
   }
   saveStore();
-  renderMembers();
-  renderMySummary();
+  renderAll();
 }
 
-// じぶんセレクター（名前タップと同じことを明示的なUIでやる）
-function setMeFromSelect(id) {
-  const ev = currentEvent();
-  if (!ev) return;
-  if (id) {
-    store.meMap[ev.id] = id;
-    toast('じぶんに設定したよ。履歴タブに自分の使用額が集計される');
-  } else {
-    delete store.meMap[ev.id];
-  }
+// じぶんセレクター（名前で選ぶ）。イベント個別のIDではなく名前を渡す
+function setMeFromSelect(name) {
+  delete store.meMap[currentEvent()?.id];
+  store.myName = name || null;
+  if (name) toast(`「${name}」をじぶんに設定したよ`);
   saveStore();
-  renderMembers();
-  renderMySummary();
+  renderAll();
+}
+
+// 全イベントに登場するメンバー名（重複なし）
+function allMemberNames() {
+  return [...new Set(store.events.flatMap(ev => ev.members.map(m => m.name)))];
 }
 
 function memberById(id) {
@@ -945,7 +973,7 @@ function renderMembers() {
     picker.style.display = 'none';
     return;
   }
-  const meId = store.meMap[ev.id];
+  const meId = meMemberOf(ev)?.id;
   box.innerHTML = ev.members.map(m => `
     <span class="chip ${m.id === meId ? 'me' : ''}">
       ${avatar(m, `onclick="cycleColor('${m.id}')" title="タップで色変更"`)}
@@ -955,12 +983,12 @@ function renderMembers() {
     </span>
   `).join('');
 
-  // じぶんセレクター
+  // じぶんセレクター（名前で選ぶ）
   picker.style.display = '';
   const sel = document.getElementById('meSelect');
   sel.innerHTML = '<option value="">未設定（選んでね）</option>' +
     ev.members.map(m =>
-      `<option value="${m.id}" ${m.id === meId ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
+      `<option value="${esc(m.name)}" ${m.name === store.myName ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
 }
 
 function renderPayerSelect() {
@@ -1260,10 +1288,17 @@ function renderMySummary() {
   const box = document.getElementById('myEvents');
   const totalEl = document.getElementById('myTotal');
 
+  // じぶんセレクター（履歴ページ側。全メンバー名から選ぶ）
+  const sel = document.getElementById('mySummarySelect');
+  if (sel) {
+    const names = allMemberNames();
+    sel.innerHTML = '<option value="">自分は誰？（選んでね）</option>' +
+      names.map(n => `<option value="${esc(n)}" ${n === store.myName ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  }
+
   const rows = [];
   store.events.forEach(ev => {
-    const meId = store.meMap[ev.id];
-    const me = meId && ev.members.find(m => m.id === meId);
+    const me = meMemberOf(ev);
     if (!me) return;
     const mine = ev.expenses.filter(x =>
       x.payers.some(p => p.memberId === me.id) || x.shares.some(s => s.memberId === me.id));
@@ -1278,7 +1313,9 @@ function renderMySummary() {
   rows.sort((a, b) => b.to.localeCompare(a.to));
 
   if (rows.length === 0) {
-    box.innerHTML = '<p class="hint">記録ページのメンバーで自分の名前をタップしてマークすると、参加したイベントの自分の使用額がここに溜まっていくよ</p>';
+    box.innerHTML = store.myName
+      ? `<p class="hint">「${esc(store.myName)}」が参加した記録がまだないよ</p>`
+      : '<p class="hint">↑で自分の名前を選ぶと、参加したイベントの自分の使用額がまとまるよ</p>';
     totalEl.textContent = '';
     return;
   }
