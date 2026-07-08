@@ -254,6 +254,81 @@ select:focus {
   flex: 3 1 260px;
 }
 
+/* 段取りガイド（①参加者→②支払い記録） */
+.step-guide {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.step-guide:empty {
+  display: none;
+  margin-bottom: 0;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.step.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.step.done {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  color: #fff;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.step.active .step-num {
+  background: var(--accent);
+}
+
+.step.done .step-num {
+  background: var(--green);
+}
+
+.step-arrow {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.gate-message {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.gate-message .hint {
+  margin-top: 6px;
+}
+
 /* ページタブ */
 .page-tabs {
   position: sticky;

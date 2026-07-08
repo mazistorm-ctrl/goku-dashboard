@@ -58,6 +58,7 @@
 
       <!-- ページ: 記録 -->
       <div class="page active" id="page-input">
+       <div id="stepGuide" class="step-guide"></div>
        <div class="columns">
         <div class="col">
 
@@ -83,6 +84,13 @@
         <!-- 支払い入力 -->
         <section class="card">
           <h2 id="expenseFormTitle">支払いを記録</h2>
+
+          <div id="expenseFormGate" class="gate-message" style="display:none">
+            <p>あと<span id="gateNeedCount">2</span>人、参加者を追加すると支払いを記録できるようになるよ</p>
+            <p class="hint">← 左の「メンバー」から名前を追加してね</p>
+          </div>
+
+          <div id="expenseFormBody">
           <div class="form-row">
             <div class="form-group form-group-full">
               <label for="expTitle">何に使った？</label>
@@ -121,6 +129,7 @@
           <div class="form-actions">
             <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">記録する</button>
             <button class="btn-secondary" id="expCancelBtn" onclick="cancelEdit()" style="display:none">キャンセル</button>
+          </div>
           </div>
         </section>
 

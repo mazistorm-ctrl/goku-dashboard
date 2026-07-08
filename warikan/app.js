@@ -166,10 +166,12 @@ function confirmNewEvent() {
   const ev = { id: uid(), name, roundUnit: 1, members: [], expenses: [], repayments: [] };
   store.events.push(ev);
   store.currentEventId = ev.id;
+  expenseGateWasOpen = null;
   saveStore();
   cancelNewEvent();
   switchPage('input');
   renderAll();
+  subscribeToCurrentEvent();
 }
 
 function renameEvent() {
@@ -214,6 +216,7 @@ function switchEvent(id) {
   payerDraft = {};
   viewDate = null;
   viewMemberId = null;
+  expenseGateWasOpen = null;
   cancelNewEvent();
   renderAll();
   subscribeToCurrentEvent();
@@ -819,6 +822,7 @@ function copyText(text, message) {
 function renderAll() {
   renderEventSelect();
   renderMembers();
+  renderStepGuide();
   renderPayerSelect();
   renderPayerUI();
   renderParticipants();
@@ -827,6 +831,44 @@ function renderAll() {
   renderMySummary();
   renderHistoryMemberSelect();
   renderHistory();
+}
+
+// walicaのように「①参加者を決める→②支払いを記録する」の段取りを示す。
+// 初めて2人揃った瞬間だけ知らせて、以降は毎回出して邪魔しない
+let expenseGateWasOpen = null;
+function renderStepGuide() {
+  const guide = document.getElementById('stepGuide');
+  const gate = document.getElementById('expenseFormGate');
+  const body = document.getElementById('expenseFormBody');
+  if (!guide || !gate || !body) return;
+  const ev = currentEvent();
+  if (!ev) { guide.innerHTML = ''; return; }
+
+  const memberCount = ev.members.length;
+  const ready = memberCount >= 2;
+
+  gate.style.display = ready ? 'none' : '';
+  body.style.display = ready ? '' : 'none';
+  if (!ready) document.getElementById('gateNeedCount').textContent = 2 - memberCount;
+
+  if (ready && expenseGateWasOpen === false) {
+    toast('参加者が揃ったよ！支払いを記録できるようになったよ');
+  }
+  expenseGateWasOpen = ready;
+
+  // イベントに記録が付き始めたら、もう段取りガイドは邪魔なので隠す
+  if (ev.expenses.length > 0) {
+    guide.innerHTML = '';
+    return;
+  }
+
+  guide.innerHTML = `
+    <div class="step done"><span class="step-num">✓</span>イベント名</div>
+    <div class="step-arrow">→</div>
+    <div class="step ${ready ? 'done' : 'active'}"><span class="step-num">${ready ? '✓' : '2'}</span>参加者を決める</div>
+    <div class="step-arrow">→</div>
+    <div class="step ${ready ? 'active' : ''}"><span class="step-num">3</span>支払いを記録</div>
+  `;
 }
 
 function renderEventSelect() {
