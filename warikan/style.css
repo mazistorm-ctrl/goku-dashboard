@@ -306,6 +306,44 @@ select:focus {
 }
 
 /* 支払い一覧 */
+.view-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.view-tabs:empty {
+  display: none;
+}
+
+.view-tab {
+  flex-shrink: 0;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #666;
+  white-space: nowrap;
+}
+
+.view-tab.active {
+  border-color: #ff5e62;
+  background: #fff0f0;
+  color: #ff5e62;
+  font-weight: bold;
+}
+
+.mine-share {
+  font-size: 11px;
+  font-weight: bold;
+  color: #1a9c5d;
+  text-align: right;
+}
+
 .expense-item {
   display: flex;
   align-items: center;

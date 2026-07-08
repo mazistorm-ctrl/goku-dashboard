@@ -27,6 +27,9 @@ function saveStore() {
 let store = loadStore();
 let splitMode = 'even';      // 'even' | 'ratio' | 'exact'
 let editingExpenseId = null;
+// 支払い一覧の絞り込み（null = すべて）
+let viewDate = null;
+let viewMemberId = null;
 // 入力途中の割り方（memberId -> {on, weight, exact}）
 let draft = {};
 
@@ -90,6 +93,8 @@ function switchEvent(id) {
   saveStore();
   editingExpenseId = null;
   draft = {};
+  viewDate = null;
+  viewMemberId = null;
   renderAll();
 }
 
@@ -574,26 +579,76 @@ function updateSplitStatus() {
   }
 }
 
+function setViewDate(d) {
+  viewDate = d || null;
+  renderExpenses();
+}
+
+function setViewMember(id) {
+  viewMemberId = id || null;
+  renderExpenses();
+}
+
 function renderExpenses() {
   const ev = currentEvent();
   if (!ev) return;
   const box = document.getElementById('expenseList');
+  const memberTabs = document.getElementById('memberTabs');
+  const dateTabs = document.getElementById('dateTabs');
   const sorted = [...ev.expenses].sort((a, b) =>
     b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 
   if (sorted.length === 0) {
+    memberTabs.innerHTML = '';
+    dateTabs.innerHTML = '';
     box.innerHTML = '<p class="hint">まだ支払い記録がないよ</p>';
     document.getElementById('expenseTotal').textContent = '';
     return;
   }
 
-  box.innerHTML = sorted.map(x => `
+  // タブの選択先が消えていたら「すべて」に戻す
+  const dates = [...new Set(sorted.map(x => x.date))];
+  if (viewDate && !dates.includes(viewDate)) viewDate = null;
+  if (viewMemberId && !ev.members.some(m => m.id === viewMemberId)) viewMemberId = null;
+
+  // メンバータブ（自分の名前を押すと自分が絡む記録だけ）
+  const tab = (labelHtml, active, onclick) =>
+    `<button class="view-tab ${active ? 'active' : ''}" onclick="${onclick}">${labelHtml}</button>`;
+  memberTabs.innerHTML =
+    tab('みんな', !viewMemberId, "setViewMember('')") +
+    ev.members.map(m =>
+      tab(`${m.emoji} ${esc(m.name)}`, viewMemberId === m.id, `setViewMember('${m.id}')`)).join('');
+
+  // 日付タブ（記録が2日以上あるときだけ表示）
+  dateTabs.innerHTML = dates.length > 1
+    ? tab('全日', !viewDate, "setViewDate('')") +
+      dates.map(d =>
+        tab(fmtDate(d).slice(5), viewDate === d, `setViewDate('${d}')`)).join('')
+    : '';
+
+  const shareOf = x => {
+    const s = x.shares.find(s => s.memberId === viewMemberId);
+    return s ? s.amount : 0;
+  };
+  const list = sorted.filter(x =>
+    (!viewDate || x.date === viewDate) &&
+    (!viewMemberId || x.payerId === viewMemberId || x.shares.some(s => s.memberId === viewMemberId)));
+
+  if (list.length === 0) {
+    box.innerHTML = '<p class="hint">この条件の記録はないよ</p>';
+    document.getElementById('expenseTotal').textContent = '';
+    return;
+  }
+
+  box.innerHTML = list.map(x => `
     <div class="expense-item">
       <div class="expense-main">
         <div class="expense-title">${esc(x.title)} <span class="badge">${MODE_LABEL[x.mode]}</span></div>
         <div class="expense-sub">${fmtDate(x.date)}｜${label(x.payerId)} が支払い → ${x.shares.map(s => esc(memberById(s.memberId)?.name || '？')).join('・')}</div>
       </div>
-      <div class="expense-amount">${yen(x.amount)}</div>
+      <div class="expense-amount">${yen(x.amount)}
+        ${viewMemberId ? `<div class="mine-share">負担 ${yen(shareOf(x))}</div>` : ''}
+      </div>
       <div class="expense-btns">
         <button class="btn-secondary btn-sm" onclick="editExpense('${x.id}')">✏️</button>
         <button class="btn-delete btn-sm" onclick="deleteExpense('${x.id}')">削除</button>
@@ -601,9 +656,17 @@ function renderExpenses() {
     </div>
   `).join('');
 
-  const total = ev.expenses.reduce((s, x) => s + x.amount, 0);
-  document.getElementById('expenseTotal').textContent =
-    `合計 ${yen(total)}／1人あたり平均 ${yen(Math.round(total / ev.members.length))}`;
+  const totalEl = document.getElementById('expenseTotal');
+  if (viewMemberId) {
+    const m = memberById(viewMemberId);
+    const owed = list.reduce((s, x) => s + shareOf(x), 0);
+    const paid = list.filter(x => x.payerId === viewMemberId).reduce((s, x) => s + x.amount, 0);
+    totalEl.textContent = `${m.name}：負担合計 ${yen(owed)}／立替合計 ${yen(paid)}`;
+  } else {
+    const total = list.reduce((s, x) => s + x.amount, 0);
+    totalEl.textContent =
+      `合計 ${yen(total)}／1人あたり平均 ${yen(Math.round(total / ev.members.length))}`;
+  }
 }
 
 function renderSettlement() {
