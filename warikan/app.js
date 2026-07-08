@@ -1014,6 +1014,13 @@ function memberNameIn(ev, id) {
   return m ? m.name : '？';
 }
 
+// その人が「使った」＝負担した金額（払った額ではなく割り勘の自分の取り分）
+function memberShareIn(ev, memberName, x) {
+  const m = ev.members.find(m => m.name === memberName);
+  if (!m) return 0;
+  return x.shares.find(s => s.memberId === m.id)?.amount || 0;
+}
+
 // 全イベントの支払いを日付降順でフラットに
 function allRecords() {
   const rows = [];
@@ -1051,13 +1058,14 @@ function renderHistoryMemberSelect() {
 }
 
 // イベント×日付でまとめる（記録の検索は明細ではなくここまでの粒度でいい）
-function groupHistoryRows(rows) {
+// メンバーで絞り込んでいるときは、そのメンバーが使った分（負担額）を合計する
+function groupHistoryRows(rows, member) {
   const map = new Map();
   rows.forEach(({ ev, x }) => {
     const key = ev.id + '|' + x.date;
     if (!map.has(key)) map.set(key, { ev, date: x.date, total: 0, count: 0 });
     const g = map.get(key);
-    g.total += x.amount;
+    g.total += member ? memberShareIn(ev, member, x) : x.amount;
     g.count += 1;
   });
   return [...map.values()].sort((a, b) => b.date.localeCompare(a.date));
@@ -1074,6 +1082,7 @@ function openEventOnDate(evId, date) {
 function renderHistory() {
   const box = document.getElementById('historyList');
   const rows = filteredRecords();
+  const member = document.getElementById('histMember').value;
 
   if (rows.length === 0) {
     box.innerHTML = '<p class="hint">該当する記録がないよ</p>';
@@ -1081,7 +1090,7 @@ function renderHistory() {
     return;
   }
 
-  const groups = groupHistoryRows(rows);
+  const groups = groupHistoryRows(rows, member);
   box.innerHTML = groups.map(g => `
     <div class="expense-item my-event" onclick="openEventOnDate('${g.ev.id}', '${g.date}')">
       <div class="expense-main">
@@ -1092,9 +1101,12 @@ function renderHistory() {
     </div>
   `).join('');
 
-  const total = rows.reduce((s, r) => s + r.x.amount, 0);
-  document.getElementById('historyTotal').textContent =
-    `${rows.length}件／合計 ${yen(total)}`;
+  const total = member
+    ? rows.reduce((s, r) => s + memberShareIn(r.ev, member, r.x), 0)
+    : rows.reduce((s, r) => s + r.x.amount, 0);
+  document.getElementById('historyTotal').textContent = member
+    ? `${rows.length}件／${member}の使用額合計 ${yen(total)}`
+    : `${rows.length}件／合計 ${yen(total)}`;
 }
 
 function exportHistoryCSV() {
