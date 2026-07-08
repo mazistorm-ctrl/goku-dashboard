@@ -62,14 +62,30 @@ function esc(s) {
 }
 
 // ===== イベント =====
+function showNewEventRow() {
+  document.getElementById('newEventRow').style.display = 'flex';
+  const input = document.getElementById('newEventName');
+  input.value = '';
+  input.focus();
+}
+
+function cancelNewEvent() {
+  document.getElementById('newEventRow').style.display = 'none';
+}
+
 // document.createEvent と衝突するので createEvent という名前は使わない
-function newEvent() {
-  const name = prompt('イベント名は？（例：3/15 飲み会）');
-  if (!name) return;
-  const ev = { id: uid(), name: name.trim(), roundUnit: 1, members: [], expenses: [] };
+function confirmNewEvent() {
+  const input = document.getElementById('newEventName');
+  const name = input.value.trim();
+  if (!name) {
+    input.focus();
+    return;
+  }
+  const ev = { id: uid(), name, roundUnit: 1, members: [], expenses: [] };
   store.events.push(ev);
   store.currentEventId = ev.id;
   saveStore();
+  cancelNewEvent();
   switchPage('input');
   renderAll();
 }
@@ -87,12 +103,22 @@ function renameEvent() {
 function deleteEvent() {
   const ev = currentEvent();
   if (!ev) return;
+  deleteEventById(ev.id);
+}
+
+// イベント履歴からの個別削除（全データ削除しなくても1件だけ消せる）
+function deleteEventById(id) {
+  const ev = store.events.find(e => e.id === id);
+  if (!ev) return;
   if (!confirm(`「${ev.name}」を削除する？記録も全部消えるよ`)) return;
-  store.events = store.events.filter(e => e.id !== ev.id);
-  delete store.meMap[ev.id];
-  store.currentEventId = store.events.length ? store.events[0].id : null;
+  store.events = store.events.filter(e => e.id !== id);
+  delete store.meMap[id];
+  if (store.currentEventId === id) {
+    store.currentEventId = store.events.length ? store.events[0].id : null;
+  }
   saveStore();
   renderAll();
+  toast('イベントを削除したよ');
 }
 
 function switchEvent(id) {
@@ -102,6 +128,7 @@ function switchEvent(id) {
   draft = {};
   viewDate = null;
   viewMemberId = null;
+  cancelNewEvent();
   renderAll();
 }
 
@@ -773,12 +800,15 @@ function renderEventList() {
   }).sort((a, b) => (b.to || '').localeCompare(a.to || ''));
 
   box.innerHTML = rows.map(r => `
-    <div class="expense-item my-event ${r.ev.id === store.currentEventId ? 'current' : ''}" onclick="openEvent('${r.ev.id}')">
-      <div class="expense-main">
+    <div class="expense-item my-event ${r.ev.id === store.currentEventId ? 'current' : ''}">
+      <div class="expense-main" onclick="openEvent('${r.ev.id}')">
         <div class="expense-title">${esc(r.ev.name)}</div>
         <div class="expense-sub">${r.from ? fmtDate(r.from) + (r.from !== r.to ? '〜' + fmtDate(r.to).slice(5) : '') : '記録なし'}｜${r.ev.members.length}人・${r.ev.expenses.length}件</div>
       </div>
-      <div class="expense-amount">${yen(r.total)}</div>
+      <div class="expense-amount" onclick="openEvent('${r.ev.id}')">${yen(r.total)}</div>
+      <div class="expense-btns">
+        <button class="btn-delete btn-sm" onclick="deleteEventById('${r.ev.id}')">削除</button>
+      </div>
     </div>
   `).join('');
 }

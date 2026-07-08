@@ -35,7 +35,13 @@
       </div>
       <div class="event-row">
         <select id="eventSelect" onchange="switchEvent(this.value)"></select>
-        <button class="btn-primary btn-sm" onclick="newEvent()">＋新規</button>
+        <button class="btn-primary btn-sm" onclick="showNewEventRow()">＋新規</button>
+      </div>
+      <div class="event-row" id="newEventRow" style="display:none">
+        <input type="text" id="newEventName" placeholder="イベント名（例：3/15 飲み会）" maxlength="30"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();confirmNewEvent();}">
+        <button class="btn-primary btn-sm" onclick="confirmNewEvent()">作成</button>
+        <button class="btn-secondary btn-sm" onclick="cancelNewEvent()">キャンセル</button>
       </div>
     </section>
 

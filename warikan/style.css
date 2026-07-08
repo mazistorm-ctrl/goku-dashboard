@@ -208,7 +208,8 @@ select:focus {
   gap: 8px;
 }
 
-.event-row select {
+.event-row select,
+.event-row input[type="text"] {
   flex: 1;
 }
 
@@ -690,6 +691,7 @@ select:focus {
   #eventCard {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 16px;
     padding: 14px 16px;
   }
