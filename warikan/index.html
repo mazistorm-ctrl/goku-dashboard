@@ -28,13 +28,11 @@
     <section class="card" id="eventCard">
       <div class="section-header">
         <h2>イベント名</h2>
-        <div class="event-actions">
-          <button class="btn-secondary btn-sm" onclick="renameEvent()">名前変更</button>
-          <button class="btn-secondary btn-sm" onclick="deleteEvent()">削除</button>
-        </div>
       </div>
       <div class="event-row">
         <select id="eventSelect" onchange="switchEvent(this.value)"></select>
+        <button class="btn-secondary btn-sm" onclick="renameEvent()">名前変更</button>
+        <button class="btn-secondary btn-sm" onclick="deleteEvent()">削除</button>
         <button class="btn-primary btn-sm" onclick="showNewEventRow()">＋新規</button>
       </div>
       <div class="event-row" id="newEventRow" style="display:none">
@@ -85,17 +83,23 @@
             </div>
             <div class="form-group">
               <label for="expAmount">金額（円）</label>
-              <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric" oninput="updateSplitStatus()">
+              <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric" oninput="updateSplitStatus();updatePayerStatus()">
             </div>
             <div class="form-group">
               <label for="expDate">日付</label>
               <input type="date" id="expDate">
             </div>
             <div class="form-group">
-              <label for="expPayer">払った人</label>
+              <div class="payer-label-row">
+                <label for="expPayer">払った人</label>
+                <button type="button" class="link-btn" id="payerModeToggle" onclick="togglePayerMode()">複数人で払った</button>
+              </div>
               <select id="expPayer"></select>
             </div>
           </div>
+
+          <div id="payerList" class="participant-list" style="display:none"></div>
+          <p id="payerStatus" class="hint" style="display:none"></p>
 
           <label class="split-label">割り方</label>
           <div class="split-tabs">

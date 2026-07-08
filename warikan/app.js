@@ -11,10 +11,14 @@ function loadStore() {
   return store;
 }
 
-// 古い形式のデータを補完する（日付なし記録・絵文字時代のメンバー）
+// 古い形式のデータを補完する（日付なし記録・絵文字時代のメンバー・単独払い専用だった頃の記録）
 function migrateEvent(ev) {
   ev.expenses.forEach(x => {
     if (!x.date) x.date = new Date(x.createdAt).toISOString().slice(0, 10);
+    if (!x.payers) {
+      x.payers = x.payerId ? [{ memberId: x.payerId, amount: x.amount }] : [];
+      delete x.payerId;
+    }
   });
   ev.members.forEach((m, i) => {
     if (typeof m.c !== 'number') m.c = i % COLORS.length;
@@ -37,6 +41,9 @@ let viewDate = null;
 let viewMemberId = null;
 // 入力途中の割り方（memberId -> {on, weight, exact}）
 let draft = {};
+// 払った人が複数のときの入力状態（memberId -> {on, exact}）
+let payerMode = 'single';    // 'single' | 'multi'
+let payerDraft = {};
 
 function currentEvent() {
   return store.events.find(e => e.id === store.currentEventId) || null;
@@ -126,6 +133,8 @@ function switchEvent(id) {
   saveStore();
   editingExpenseId = null;
   draft = {};
+  payerMode = 'single';
+  payerDraft = {};
   viewDate = null;
   viewMemberId = null;
   cancelNewEvent();
@@ -151,7 +160,8 @@ function addMember() {
 
 function removeMember(id) {
   const ev = currentEvent();
-  const used = ev.expenses.some(x => x.payerId === id || x.shares.some(s => s.memberId === id));
+  const used = ev.expenses.some(x =>
+    x.payers.some(p => p.memberId === id) || x.shares.some(s => s.memberId === id));
   if (used) {
     alert('支払い記録で使われてるメンバーは消せないよ。先に記録を直してね');
     return;
@@ -205,6 +215,13 @@ function avatar(m, extra) {
 function person(id) {
   const m = memberById(id);
   return m ? `<span class="person">${avatar(m)}${esc(m.name)}</span>` : '？';
+}
+
+// 複数人払いのとき「たけし(8000円)・ひろし(4000円)」のように表示
+function payersLabel(payers) {
+  if (!payers || payers.length === 0) return '？';
+  if (payers.length === 1) return esc(nameOf(payers[0].memberId));
+  return payers.map(p => `${esc(nameOf(p.memberId))}(${yen(p.amount)})`).join('・');
 }
 
 // ===== 割り方の計算 =====
@@ -284,6 +301,101 @@ function fillRemainder() {
   renderParticipants();
 }
 
+// ===== 払った人（複数人払い対応） =====
+function togglePayerMode() {
+  payerMode = payerMode === 'single' ? 'multi' : 'single';
+  renderPayerUI();
+}
+
+function ensurePayerDraft(id) {
+  if (!payerDraft[id]) payerDraft[id] = { on: false, exact: '' };
+  return payerDraft[id];
+}
+
+function togglePayer(id) {
+  ensurePayerDraft(id).on = !payerDraft[id].on;
+  renderPayerList();
+}
+
+function setPayerAmount(id, value) {
+  ensurePayerDraft(id).exact = value;
+  updatePayerStatus();
+}
+
+// 払った人の残りを空欄の人で均等に割り振る（参加者側のfillRemainderと同じ考え方）
+function fillPayerRemainder() {
+  const amount = parseInt(document.getElementById('expAmount').value, 10) || 0;
+  if (!amount) {
+    alert('先に支払いの金額を入れてね');
+    return;
+  }
+  const onIds = Object.keys(payerDraft).filter(id => payerDraft[id].on);
+  const blank = onIds.filter(id => payerDraft[id].exact === '');
+  if (blank.length === 0) {
+    alert('空欄の人がいないよ。自動で埋めたい人の金額を空にしてね');
+    return;
+  }
+  const sumFilled = onIds.filter(id => payerDraft[id].exact !== '')
+    .reduce((s, id) => s + (parseInt(payerDraft[id].exact, 10) || 0), 0);
+  const rest = amount - sumFilled;
+  if (rest < 0) {
+    alert(`入力済みの合計（${yen(sumFilled)}）が支払額（${yen(amount)}）を超えてるよ`);
+    return;
+  }
+  computeShares(rest, blank.map(id => ({ id, w: 1 })))
+    .forEach(s => payerDraft[s.memberId].exact = String(s.amount));
+  renderPayerList();
+}
+
+function renderPayerUI() {
+  const sel = document.getElementById('expPayer');
+  const list = document.getElementById('payerList');
+  const status = document.getElementById('payerStatus');
+  const toggleBtn = document.getElementById('payerModeToggle');
+  if (payerMode === 'single') {
+    sel.style.display = '';
+    list.style.display = 'none';
+    status.style.display = 'none';
+    toggleBtn.textContent = '複数人で払った';
+  } else {
+    sel.style.display = 'none';
+    list.style.display = '';
+    status.style.display = '';
+    toggleBtn.textContent = '1人で払った';
+    renderPayerList();
+  }
+}
+
+function renderPayerList() {
+  const ev = currentEvent();
+  if (!ev) return;
+  const box = document.getElementById('payerList');
+  box.innerHTML = ev.members.map(m => {
+    const d = ensurePayerDraft(m.id);
+    return `
+      <div class="participant-row ${d.on ? '' : 'off'}">
+        <label>
+          <input type="checkbox" ${d.on ? 'checked' : ''} onchange="togglePayer('${m.id}')">
+          ${avatar(m)}${esc(m.name)}
+        </label>
+        ${d.on ? `<input type="number" class="exact-input" inputmode="numeric" placeholder="円"
+                   value="${esc(d.exact)}" oninput="setPayerAmount('${m.id}', this.value)">` : ''}
+      </div>`;
+  }).join('') + `
+      <div class="participant-row exact-tools">
+        <button class="btn-secondary btn-sm" onclick="fillPayerRemainder()">残りを空欄の人で均等に</button>
+      </div>`;
+  updatePayerStatus();
+}
+
+function updatePayerStatus() {
+  const amount = parseInt(document.getElementById('expAmount').value, 10) || 0;
+  const sum = Object.keys(payerDraft).filter(id => payerDraft[id].on)
+    .reduce((s, id) => s + (parseInt(payerDraft[id].exact, 10) || 0), 0);
+  document.getElementById('payerStatus').textContent =
+    `支払った合計 ${yen(sum)}／残り ${yen(amount - sum)}（残りを0にして記録してね）`;
+}
+
 // ===== 支払い =====
 function saveExpense() {
   const ev = currentEvent();
@@ -291,11 +403,32 @@ function saveExpense() {
   const title = document.getElementById('expTitle').value.trim();
   const amount = parseInt(document.getElementById('expAmount').value, 10);
   const date = document.getElementById('expDate').value;
-  const payerId = document.getElementById('expPayer').value;
 
-  if (!title || !amount || amount <= 0 || !payerId || !date) {
-    alert('内容・金額・日付・払った人は必須だよ');
+  if (!title || !amount || amount <= 0 || !date) {
+    alert('内容・金額・日付は必須だよ');
     return;
+  }
+
+  let payers;
+  if (payerMode === 'single') {
+    const payerId = document.getElementById('expPayer').value;
+    if (!payerId) {
+      alert('払った人を選んでね');
+      return;
+    }
+    payers = [{ memberId: payerId, amount }];
+  } else {
+    const payerIds = ev.members.filter(m => payerDraft[m.id] && payerDraft[m.id].on);
+    if (payerIds.length === 0) {
+      alert('払った人を1人以上選んでね');
+      return;
+    }
+    payers = payerIds.map(m => ({ memberId: m.id, amount: parseInt(payerDraft[m.id].exact, 10) || 0 }));
+    const payerSum = payers.reduce((s, p) => s + p.amount, 0);
+    if (payerSum !== amount) {
+      alert(`支払った合計（${yen(payerSum)}）が支払額（${yen(amount)}）と合わないよ`);
+      return;
+    }
   }
 
   const on = ev.members.filter(m => ensureDraft(m.id).on);
@@ -323,7 +456,7 @@ function saveExpense() {
 
   const exp = {
     id: editingExpenseId || uid(),
-    title, amount, date, payerId,
+    title, amount, date, payers,
     mode: splitMode,
     weights: splitMode === 'ratio' ? on.map(m => ({ memberId: m.id, w: draft[m.id].weight })) : null,
     shares,
@@ -353,10 +486,20 @@ function editExpense(id) {
   document.getElementById('expTitle').value = exp.title;
   document.getElementById('expAmount').value = exp.amount;
   document.getElementById('expDate').value = exp.date;
-  document.getElementById('expPayer').value = exp.payerId;
   document.getElementById('expenseFormTitle').textContent = '支払いを編集中';
   document.getElementById('expSaveBtn').textContent = '更新する';
   document.getElementById('expCancelBtn').style.display = '';
+
+  payerMode = exp.payers.length > 1 ? 'multi' : 'single';
+  payerDraft = {};
+  ev.members.forEach(m => {
+    const p = exp.payers.find(p => p.memberId === m.id);
+    payerDraft[m.id] = { on: !!p, exact: p ? String(p.amount) : '' };
+  });
+  if (payerMode === 'single' && exp.payers[0]) {
+    document.getElementById('expPayer').value = exp.payers[0].memberId;
+  }
+  renderPayerUI();
 
   draft = {};
   ev.members.forEach(m => {
@@ -376,12 +519,15 @@ function editExpense(id) {
 function cancelEdit() {
   editingExpenseId = null;
   draft = {};
+  payerMode = 'single';
+  payerDraft = {};
   document.getElementById('expTitle').value = '';
   document.getElementById('expAmount').value = '';
   document.getElementById('expDate').value = today();
   document.getElementById('expenseFormTitle').textContent = '支払いを記録';
   document.getElementById('expSaveBtn').textContent = '記録する';
   document.getElementById('expCancelBtn').style.display = 'none';
+  renderPayerUI();
   setSplitMode('even');
 }
 
@@ -400,7 +546,9 @@ function computeBalances(ev) {
   const bal = {};
   ev.members.forEach(m => bal[m.id] = { paid: 0, owed: 0 });
   ev.expenses.forEach(x => {
-    if (bal[x.payerId]) bal[x.payerId].paid += x.amount;
+    x.payers.forEach(p => {
+      if (bal[p.memberId]) bal[p.memberId].paid += p.amount;
+    });
     x.shares.forEach(s => {
       if (bal[s.memberId]) bal[s.memberId].owed += s.amount;
     });
@@ -534,6 +682,7 @@ function renderAll() {
   renderEventSelect();
   renderMembers();
   renderPayerSelect();
+  renderPayerUI();
   renderParticipants();
   renderExpenses();
   renderSettlement();
@@ -693,9 +842,13 @@ function renderExpenses() {
     const s = x.shares.find(s => s.memberId === viewMemberId);
     return s ? s.amount : 0;
   };
+  const paidOf = x => {
+    const p = x.payers.find(p => p.memberId === viewMemberId);
+    return p ? p.amount : 0;
+  };
   const list = sorted.filter(x =>
     (!viewDate || x.date === viewDate) &&
-    (!viewMemberId || x.payerId === viewMemberId || x.shares.some(s => s.memberId === viewMemberId)));
+    (!viewMemberId || x.payers.some(p => p.memberId === viewMemberId) || x.shares.some(s => s.memberId === viewMemberId)));
 
   if (list.length === 0) {
     box.innerHTML = '<p class="hint">この条件の記録はないよ</p>';
@@ -707,7 +860,7 @@ function renderExpenses() {
     <div class="expense-item">
       <div class="expense-main">
         <div class="expense-title">${esc(x.title)} <span class="badge">${MODE_LABEL[x.mode]}</span></div>
-        <div class="expense-sub">${fmtDate(x.date)}｜${esc(nameOf(x.payerId))} が支払い → ${x.shares.map(s => esc(memberById(s.memberId)?.name || '？')).join('・')}</div>
+        <div class="expense-sub">${fmtDate(x.date)}｜${payersLabel(x.payers)} が支払い → ${x.shares.map(s => esc(memberById(s.memberId)?.name || '？')).join('・')}</div>
       </div>
       <div class="expense-amount">${yen(x.amount)}
         ${viewMemberId ? `<div class="mine-share">負担 ${yen(shareOf(x))}</div>` : ''}
@@ -723,7 +876,7 @@ function renderExpenses() {
   if (viewMemberId) {
     const m = memberById(viewMemberId);
     const owed = list.reduce((s, x) => s + shareOf(x), 0);
-    const paid = list.filter(x => x.payerId === viewMemberId).reduce((s, x) => s + x.amount, 0);
+    const paid = list.reduce((s, x) => s + paidOf(x), 0);
     totalEl.textContent = `${m.name}：負担合計 ${yen(owed)}／立替合計 ${yen(paid)}`;
   } else {
     const total = list.reduce((s, x) => s + x.amount, 0);
@@ -824,11 +977,12 @@ function renderMySummary() {
     const me = meId && ev.members.find(m => m.id === meId);
     if (!me) return;
     const mine = ev.expenses.filter(x =>
-      x.payerId === me.id || x.shares.some(s => s.memberId === me.id));
+      x.payers.some(p => p.memberId === me.id) || x.shares.some(s => s.memberId === me.id));
     if (mine.length === 0) return;
     const owed = mine.reduce((s, x) =>
       s + (x.shares.find(sh => sh.memberId === me.id)?.amount || 0), 0);
-    const paid = mine.filter(x => x.payerId === me.id).reduce((s, x) => s + x.amount, 0);
+    const paid = mine.reduce((s, x) =>
+      s + (x.payers.find(p => p.memberId === me.id)?.amount || 0), 0);
     const dates = mine.map(x => x.date).sort();
     rows.push({ ev, me, owed, paid, from: dates[0], to: dates[dates.length - 1] });
   });
@@ -878,7 +1032,7 @@ function filteredRecords() {
   return allRecords().filter(({ ev, x }) => {
     if (kw && !(x.title.toLowerCase().includes(kw) || ev.name.toLowerCase().includes(kw))) return false;
     if (member) {
-      const names = [memberNameIn(ev, x.payerId), ...x.shares.map(s => memberNameIn(ev, s.memberId))];
+      const names = [...x.payers.map(p => memberNameIn(ev, p.memberId)), ...x.shares.map(s => memberNameIn(ev, s.memberId))];
       if (!names.includes(member)) return false;
     }
     if (from && x.date < from) return false;
@@ -896,6 +1050,27 @@ function renderHistoryMemberSelect() {
   if (names.includes(prev)) sel.value = prev;
 }
 
+// イベント×日付でまとめる（記録の検索は明細ではなくここまでの粒度でいい）
+function groupHistoryRows(rows) {
+  const map = new Map();
+  rows.forEach(({ ev, x }) => {
+    const key = ev.id + '|' + x.date;
+    if (!map.has(key)) map.set(key, { ev, date: x.date, total: 0, count: 0 });
+    const g = map.get(key);
+    g.total += x.amount;
+    g.count += 1;
+  });
+  return [...map.values()].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+// 記録の検索からタップしたら、その日に絞ったイベント内訳に飛ぶ
+function openEventOnDate(evId, date) {
+  switchEvent(evId);
+  viewDate = date;
+  renderExpenses();
+  switchPage('list');
+}
+
 function renderHistory() {
   const box = document.getElementById('historyList');
   const rows = filteredRecords();
@@ -906,13 +1081,14 @@ function renderHistory() {
     return;
   }
 
-  box.innerHTML = rows.map(({ ev, x }) => `
-    <div class="expense-item">
+  const groups = groupHistoryRows(rows);
+  box.innerHTML = groups.map(g => `
+    <div class="expense-item my-event" onclick="openEventOnDate('${g.ev.id}', '${g.date}')">
       <div class="expense-main">
-        <div class="expense-title">${esc(x.title)} <span class="badge">${esc(ev.name)}</span></div>
-        <div class="expense-sub">${fmtDate(x.date)}｜${esc(memberNameIn(ev, x.payerId))} が支払い → ${x.shares.map(s => esc(memberNameIn(ev, s.memberId))).join('・')}</div>
+        <div class="expense-title">${esc(g.ev.name)}</div>
+        <div class="expense-sub">${fmtDate(g.date)}｜${g.count}件</div>
       </div>
-      <div class="expense-amount">${yen(x.amount)}</div>
+      <div class="expense-amount">${yen(g.total)}</div>
     </div>
   `).join('');
 
@@ -934,7 +1110,7 @@ function exportHistoryCSV() {
     ev.name,
     x.title,
     x.amount,
-    memberNameIn(ev, x.payerId),
+    x.payers.map(p => `${memberNameIn(ev, p.memberId)}(${p.amount}円)`).join(' / '),
     x.shares.map(s => `${memberNameIn(ev, s.memberId)}(${s.amount}円)`).join(' / '),
     MODE_LABEL[x.mode]
   ]);
