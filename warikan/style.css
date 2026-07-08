@@ -109,6 +109,8 @@ h2::before {
   cursor: pointer;
   font-family: inherit;
   transition: background 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-primary {
@@ -208,9 +210,17 @@ select:focus {
   gap: 8px;
 }
 
-.event-row select,
-.event-row input[type="text"] {
-  flex: 1;
+.event-row select {
+  flex: 0 1 200px;
+  min-width: 120px;
+}
+
+#newEventRow {
+  flex-wrap: wrap;
+}
+
+#newEventRow input[type="text"] {
+  flex: 3 1 260px;
 }
 
 .event-actions {
@@ -702,7 +712,11 @@ select:focus {
   }
 
   #eventCard .event-row {
-    flex: 1;
+    flex: 0 1 auto;
+  }
+
+  #eventCard #newEventRow {
+    flex: 1 1 auto;
   }
 
   .columns {
