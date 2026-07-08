@@ -278,10 +278,22 @@ select:focus {
   cursor: pointer;
 }
 
-.weight-control b {
-  min-width: 40px;
+.weight-x {
+  color: #ff5e62;
+  font-weight: bold;
+}
+
+.weight-input {
+  width: 64px !important;
   text-align: center;
   color: #ff5e62;
+  font-weight: bold;
+  padding: 6px 4px !important;
+}
+
+.exact-tools {
+  justify-content: flex-end;
+  background: #fafafa;
 }
 
 .exact-input {

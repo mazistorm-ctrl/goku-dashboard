@@ -178,13 +178,47 @@ function toggleParticipant(id) {
 
 function stepWeight(id, delta) {
   const d = ensureDraft(id);
-  d.weight = Math.max(0.5, Math.round((d.weight + delta) * 2) / 2);
+  const cur = (typeof d.weight === 'number' && d.weight > 0) ? d.weight : 1;
+  d.weight = Math.max(0.1, Math.round((cur + delta) * 10) / 10);
   renderParticipants();
+}
+
+// 入力中のフォーカスを保つため、この2つは一覧を再描画しない
+function setWeight(id, value) {
+  ensureDraft(id).weight = parseFloat(value);
+  updateSplitStatus();
 }
 
 function setExact(id, value) {
   ensureDraft(id).exact = value;
   updateSplitStatus();
+}
+
+// 金額指定モード: 支払額の残りを空欄の人に均等に割り振る
+function fillRemainder() {
+  const ev = currentEvent();
+  if (!ev) return;
+  const amount = parseInt(document.getElementById('expAmount').value, 10) || 0;
+  if (!amount) {
+    alert('先に支払いの金額を入れてね');
+    return;
+  }
+  const on = ev.members.filter(m => ensureDraft(m.id).on);
+  const blank = on.filter(m => draft[m.id].exact === '');
+  if (blank.length === 0) {
+    alert('空欄の人がいないよ。自動で埋めたい人の金額を空にしてね');
+    return;
+  }
+  const sumFilled = on.filter(m => draft[m.id].exact !== '')
+    .reduce((s, m) => s + (parseInt(draft[m.id].exact, 10) || 0), 0);
+  const rest = amount - sumFilled;
+  if (rest < 0) {
+    alert(`入力済みの合計（${yen(sumFilled)}）が支払額（${yen(amount)}）を超えてるよ`);
+    return;
+  }
+  computeShares(rest, blank.map(m => ({ id: m.id, w: 1 })))
+    .forEach(s => draft[s.memberId].exact = String(s.amount));
+  renderParticipants();
 }
 
 // ===== 支払い =====
@@ -217,6 +251,10 @@ function saveExpense() {
     }
   } else {
     const weights = on.map(m => ({ id: m.id, w: splitMode === 'ratio' ? draft[m.id].weight : 1 }));
+    if (splitMode === 'ratio' && weights.some(x => !(x.w > 0))) {
+      alert('倍率は0より大きい数字で入れてね');
+      return;
+    }
     shares = computeShares(amount, weights);
   }
 
@@ -488,10 +526,12 @@ function renderParticipants() {
     const d = ensureDraft(m.id);
     let control = '';
     if (d.on && splitMode === 'ratio') {
+      const w = (typeof d.weight === 'number' && !isNaN(d.weight)) ? d.weight : '';
       control = `
         <span class="weight-control">
           <button onclick="stepWeight('${m.id}', -0.5)">−</button>
-          <b>×${d.weight}</b>
+          <span class="weight-x">×</span><input type="number" class="weight-input" step="0.1" min="0.1"
+            value="${w}" oninput="setWeight('${m.id}', this.value)">
           <button onclick="stepWeight('${m.id}', 0.5)">＋</button>
         </span>`;
     } else if (d.on && splitMode === 'exact') {
@@ -507,6 +547,12 @@ function renderParticipants() {
         ${control}
       </div>`;
   }).join('');
+  if (splitMode === 'exact') {
+    box.innerHTML += `
+      <div class="participant-row exact-tools">
+        <button class="btn-secondary btn-sm" onclick="fillRemainder()">🪄 残りを空欄の人で均等に</button>
+      </div>`;
+  }
   updateSplitStatus();
 }
 
@@ -515,12 +561,14 @@ function updateSplitStatus() {
   const el = document.getElementById('splitStatus');
   if (!ev) { el.textContent = ''; return; }
   if (splitMode === 'exact') {
+    const amount = parseInt(document.getElementById('expAmount').value, 10) || 0;
     const sum = ev.members
       .filter(m => draft[m.id] && draft[m.id].on)
       .reduce((s, m) => s + (parseInt(draft[m.id].exact, 10) || 0), 0);
-    el.textContent = `指定合計：${yen(sum)}（支払額と一致させてね）`;
+    const rest = amount - sum;
+    el.textContent = `指定合計 ${yen(sum)}／残り ${yen(rest)}（残りを0にして記録してね）`;
   } else if (splitMode === 'ratio') {
-    el.textContent = '×2なら2人分、×0.5なら半人分の負担になるよ';
+    el.textContent = '×2なら2人分、×0.5なら半人分。×1.3みたいに直接入力もできるよ';
   } else {
     el.textContent = 'チェックした人で均等に割るよ';
   }
