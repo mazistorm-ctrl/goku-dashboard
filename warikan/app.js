@@ -923,6 +923,17 @@ function exportHistoryCSV() {
   URL.revokeObjectURL(url);
 }
 
+// ===== 全データ削除 =====
+function resetAll() {
+  if (!confirm('この端末に保存されたワリカンのデータ（全イベント・全記録）を削除する？')) return;
+  if (!confirm('本当に削除する？元に戻せないよ')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  store = loadStore();
+  switchPage('input');
+  renderAll();
+  toast('データをすべて削除したよ');
+}
+
 // ===== トースト =====
 let toastTimer = null;
 function toast(message) {

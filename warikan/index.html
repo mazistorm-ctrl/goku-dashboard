@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ワリカン〜友達間割り勘〜</title>
-  <meta name="theme-color" content="#23272c">
+  <meta name="theme-color" content="#1d2b3a">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
@@ -27,7 +27,7 @@
     <!-- イベント選択 -->
     <section class="card" id="eventCard">
       <div class="section-header">
-        <h2>イベント</h2>
+        <h2>イベント名</h2>
         <div class="event-actions">
           <button class="btn-secondary btn-sm" onclick="renameEvent()">名前変更</button>
           <button class="btn-secondary btn-sm" onclick="deleteEvent()">削除</button>
@@ -43,8 +43,8 @@
 
       <!-- ページタブ -->
       <nav class="page-tabs">
-        <button class="page-tab active" data-page="input" onclick="switchPage('input')">記録</button>
-        <button class="page-tab" data-page="list" onclick="switchPage('list')">一覧</button>
+        <button class="page-tab active" data-page="input" onclick="switchPage('input')">記録する</button>
+        <button class="page-tab" data-page="list" onclick="switchPage('list')">イベント内訳</button>
         <button class="page-tab" data-page="settle" onclick="switchPage('settle')">精算</button>
         <button class="page-tab" data-page="history" onclick="switchPage('history')">履歴</button>
       </nav>
@@ -114,7 +114,7 @@
       <!-- ページ: 一覧 -->
       <div class="page page-narrow" id="page-list">
         <section class="card">
-          <h2>支払い一覧</h2>
+          <h2>イベント内訳</h2>
           <div id="memberTabs" class="view-tabs"></div>
           <div id="dateTabs" class="view-tabs"></div>
           <div id="expenseList"></div>
@@ -154,7 +154,7 @@
         <!-- イベントの羅列 -->
         <section class="card">
           <h2>イベント履歴</h2>
-          <p class="hint">タップするとそのイベントの一覧に飛ぶよ</p>
+          <p class="hint">タップするとそのイベントの内訳に飛ぶよ</p>
           <div id="eventListView"></div>
         </section>
 
@@ -198,6 +198,10 @@
 
         </div>
        </div>
+
+       <p class="danger-zone">
+         <button class="btn-delete btn-sm" onclick="resetAll()">この端末のワリカンのデータをすべて削除</button>
+       </p>
       </div>
 
     </div>
