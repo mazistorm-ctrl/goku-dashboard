@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ワリカン〜友達間割り勘〜</title>
-  <meta name="theme-color" content="#ff5e62">
+  <meta name="theme-color" content="#23272c">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
@@ -17,8 +17,8 @@
 
   <header>
     <div class="header-inner">
-      <h1>🍻 ワリカン</h1>
-      <p>ログイン不要・友達間の割り勘精算</p>
+      <h1>ワリカン<span class="accent-dot">.</span></h1>
+      <p>友達間の割り勘精算 — ログイン不要</p>
     </div>
   </header>
 
@@ -27,10 +27,10 @@
     <!-- イベント選択 -->
     <section class="card" id="eventCard">
       <div class="section-header">
-        <h2>📅 イベント</h2>
+        <h2>イベント</h2>
         <div class="event-actions">
-          <button class="btn-secondary btn-sm" onclick="renameEvent()">✏️</button>
-          <button class="btn-secondary btn-sm" onclick="deleteEvent()">🗑</button>
+          <button class="btn-secondary btn-sm" onclick="renameEvent()">名前変更</button>
+          <button class="btn-secondary btn-sm" onclick="deleteEvent()">削除</button>
         </div>
       </div>
       <div class="event-row">
@@ -43,10 +43,10 @@
 
       <!-- ページタブ -->
       <nav class="page-tabs">
-        <button class="page-tab active" data-page="input" onclick="switchPage('input')">📝 記録</button>
-        <button class="page-tab" data-page="list" onclick="switchPage('list')">📋 一覧</button>
-        <button class="page-tab" data-page="settle" onclick="switchPage('settle')">💸 精算</button>
-        <button class="page-tab" data-page="history" onclick="switchPage('history')">📅 履歴</button>
+        <button class="page-tab active" data-page="input" onclick="switchPage('input')">記録</button>
+        <button class="page-tab" data-page="list" onclick="switchPage('list')">一覧</button>
+        <button class="page-tab" data-page="settle" onclick="switchPage('settle')">精算</button>
+        <button class="page-tab" data-page="history" onclick="switchPage('history')">履歴</button>
       </nav>
 
       <!-- ページ: 記録 -->
@@ -56,14 +56,14 @@
 
         <!-- メンバー -->
         <section class="card">
-          <h2>👥 メンバー</h2>
+          <h2>メンバー</h2>
           <div id="memberChips" class="member-chips"></div>
           <div class="member-add-row">
             <input type="text" id="memberName" placeholder="名前（例：たけし）" maxlength="12"
                    onkeydown="if(event.key==='Enter')addMember()">
             <button class="btn-primary btn-sm" onclick="addMember()">追加</button>
           </div>
-          <p class="hint">アイコンをタップすると絵文字が変わるよ</p>
+          <p class="hint">丸をタップで色変更、名前をタップで「自分」としてマークできるよ</p>
         </section>
 
         </div>
@@ -71,7 +71,7 @@
 
         <!-- 支払い入力 -->
         <section class="card">
-          <h2 id="expenseFormTitle">📝 支払いを記録</h2>
+          <h2 id="expenseFormTitle">支払いを記録</h2>
           <div class="form-row">
             <div class="form-group form-group-full">
               <label for="expTitle">何に使った？</label>
@@ -94,7 +94,7 @@
           <label class="split-label">割り方</label>
           <div class="split-tabs">
             <button id="tab-even"  class="split-tab active" onclick="setSplitMode('even')">均等</button>
-            <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜（多め/少なめ）</button>
+            <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜</button>
             <button id="tab-exact" class="split-tab" onclick="setSplitMode('exact')">金額指定</button>
           </div>
 
@@ -102,7 +102,7 @@
           <p id="splitStatus" class="hint"></p>
 
           <div class="form-actions">
-            <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">💾 記録する</button>
+            <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">記録する</button>
             <button class="btn-secondary" id="expCancelBtn" onclick="cancelEdit()" style="display:none">キャンセル</button>
           </div>
         </section>
@@ -114,7 +114,7 @@
       <!-- ページ: 一覧 -->
       <div class="page page-narrow" id="page-list">
         <section class="card">
-          <h2>📋 支払い一覧</h2>
+          <h2>支払い一覧</h2>
           <div id="memberTabs" class="view-tabs"></div>
           <div id="dateTabs" class="view-tabs"></div>
           <div id="expenseList"></div>
@@ -126,7 +126,7 @@
       <div class="page page-narrow" id="page-settle">
         <section class="card">
           <div class="section-header">
-            <h2>💸 精算</h2>
+            <h2>精算</h2>
             <div class="round-row">
               <label for="roundUnit">端数</label>
               <select id="roundUnit" onchange="setRoundUnit(this.value)">
@@ -139,8 +139,8 @@
           <div id="balanceSummary"></div>
           <div id="settlementList"></div>
           <div class="form-actions">
-            <button class="btn-primary" onclick="copySettlementText()">📋 LINE用にコピー</button>
-            <button class="btn-secondary" onclick="copyShareUrl()">🔗 共有URLをコピー</button>
+            <button class="btn-primary" onclick="copySettlementText()">LINE用にコピー</button>
+            <button class="btn-secondary" onclick="copyShareUrl()">共有URLをコピー</button>
           </div>
           <p class="hint">共有URLにはこのイベントのデータが入ってるから、開いた人はそのまま続きから使えるよ</p>
         </section>
@@ -153,9 +153,16 @@
 
         <!-- イベントの羅列 -->
         <section class="card">
-          <h2>📅 イベント履歴</h2>
+          <h2>イベント履歴</h2>
           <p class="hint">タップするとそのイベントの一覧に飛ぶよ</p>
           <div id="eventListView"></div>
+        </section>
+
+        <!-- じぶんのまとめ（自分マークベース） -->
+        <section class="card">
+          <h2>じぶんのまとめ</h2>
+          <div id="myEvents"></div>
+          <div id="myTotal" class="expense-total"></div>
         </section>
 
         </div>
@@ -164,8 +171,8 @@
         <!-- 記録の検索（全イベント横断） -->
         <section class="card">
           <div class="section-header">
-            <h2>📖 記録の検索</h2>
-            <button class="btn-secondary btn-sm" onclick="exportHistoryCSV()">📥 CSV</button>
+            <h2>記録の検索</h2>
+            <button class="btn-secondary btn-sm" onclick="exportHistoryCSV()">CSV書き出し</button>
           </div>
           <div class="form-row filter-row">
             <div class="form-group">

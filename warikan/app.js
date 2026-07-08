@@ -1,18 +1,23 @@
 // ===== データ管理 =====
 const STORAGE_KEY = 'warikan-data';
-const EMOJIS = ['🍺','🍕','🍣','🎸','⚽','🎮','🐶','🐱','🦁','🐸','🍜','🍔','🎤','🏀','🚗','⛺'];
+const COLORS = ['#E8604C', '#3B82C4', '#2E9E6B', '#C4863B', '#7A5FB8', '#D6558E', '#4A9FA8', '#5B7A3C'];
 
 function loadStore() {
   const data = localStorage.getItem(STORAGE_KEY);
   const store = data ? JSON.parse(data) : { events: [], currentEventId: null };
+  // 「自分」マーク（イベントID→メンバーID）。端末内だけの情報で共有URLには乗らない
+  store.meMap = store.meMap || {};
   store.events.forEach(migrateEvent);
   return store;
 }
 
-// 日付欄がなかった頃の記録には登録時刻から日付を補完する
+// 古い形式のデータを補完する（日付なし記録・絵文字時代のメンバー）
 function migrateEvent(ev) {
   ev.expenses.forEach(x => {
     if (!x.date) x.date = new Date(x.createdAt).toISOString().slice(0, 10);
+  });
+  ev.members.forEach((m, i) => {
+    if (typeof m.c !== 'number') m.c = i % COLORS.length;
   });
 }
 
@@ -84,6 +89,7 @@ function deleteEvent() {
   if (!ev) return;
   if (!confirm(`「${ev.name}」を削除する？記録も全部消えるよ`)) return;
   store.events = store.events.filter(e => e.id !== ev.id);
+  delete store.meMap[ev.id];
   store.currentEventId = store.events.length ? store.events[0].id : null;
   saveStore();
   renderAll();
@@ -110,7 +116,7 @@ function addMember() {
     alert('同じ名前のメンバーがいるよ');
     return;
   }
-  ev.members.push({ id: uid(), name, emoji: EMOJIS[ev.members.length % EMOJIS.length] });
+  ev.members.push({ id: uid(), name, c: ev.members.length % COLORS.length });
   input.value = '';
   saveStore();
   renderAll();
@@ -125,19 +131,32 @@ function removeMember(id) {
   }
   if (!confirm('このメンバーを削除する？')) return;
   ev.members = ev.members.filter(m => m.id !== id);
+  if (store.meMap[ev.id] === id) delete store.meMap[ev.id];
   delete draft[id];
   saveStore();
   renderAll();
 }
 
-function cycleEmoji(id) {
+function cycleColor(id) {
   const ev = currentEvent();
   const m = ev.members.find(m => m.id === id);
-  m.emoji = EMOJIS[(EMOJIS.indexOf(m.emoji) + 1) % EMOJIS.length];
+  m.c = (m.c + 1) % COLORS.length;
+  saveStore();
+  renderAll();
+}
+
+// このイベントでの「自分」をマークする（もう一度タップで解除）
+function toggleMe(id) {
+  const ev = currentEvent();
+  if (store.meMap[ev.id] === id) {
+    delete store.meMap[ev.id];
+  } else {
+    store.meMap[ev.id] = id;
+    toast('自分としてマークしたよ。履歴タブに自分の使用額が集計される');
+  }
   saveStore();
   renderMembers();
-  renderExpenses();
-  renderSettlement();
+  renderMySummary();
 }
 
 function memberById(id) {
@@ -145,9 +164,20 @@ function memberById(id) {
   return ev ? ev.members.find(m => m.id === id) : null;
 }
 
-function label(id) {
+function nameOf(id) {
   const m = memberById(id);
-  return m ? `${m.emoji} ${m.name}` : '？';
+  return m ? m.name : '？';
+}
+
+// 色付きイニシャルのアバター
+function avatar(m, extra) {
+  if (!m) return '';
+  return `<span class="avatar" style="background:${COLORS[m.c % COLORS.length]}" ${extra || ''}>${esc([...m.name][0])}</span>`;
+}
+
+function person(id) {
+  const m = memberById(id);
+  return m ? `<span class="person">${avatar(m)}${esc(m.name)}</span>` : '？';
 }
 
 // ===== 割り方の計算 =====
@@ -297,8 +327,8 @@ function editExpense(id) {
   document.getElementById('expAmount').value = exp.amount;
   document.getElementById('expDate').value = exp.date;
   document.getElementById('expPayer').value = exp.payerId;
-  document.getElementById('expenseFormTitle').textContent = '✏️ 支払いを編集中';
-  document.getElementById('expSaveBtn').textContent = '💾 更新する';
+  document.getElementById('expenseFormTitle').textContent = '支払いを編集中';
+  document.getElementById('expSaveBtn').textContent = '更新する';
   document.getElementById('expCancelBtn').style.display = '';
 
   draft = {};
@@ -322,8 +352,8 @@ function cancelEdit() {
   document.getElementById('expTitle').value = '';
   document.getElementById('expAmount').value = '';
   document.getElementById('expDate').value = today();
-  document.getElementById('expenseFormTitle').textContent = '📝 支払いを記録';
-  document.getElementById('expSaveBtn').textContent = '💾 記録する';
+  document.getElementById('expenseFormTitle').textContent = '支払いを記録';
+  document.getElementById('expSaveBtn').textContent = '記録する';
   document.getElementById('expCancelBtn').style.display = 'none';
   setSplitMode('even');
 }
@@ -439,12 +469,12 @@ function settlementText(ev) {
   const total = ev.expenses.reduce((s, x) => s + x.amount, 0);
   const transfers = computeSettlements(ev);
   const lines = [
-    `🍻 ${ev.name} の精算`,
+    `【${ev.name} の精算】`,
     `合計 ${yen(total)}（${ev.members.length}人）`,
     ''
   ];
   if (transfers.length === 0) {
-    lines.push('精算なし！みんなピッタリ✨');
+    lines.push('精算なし！みんなピッタリ');
   } else {
     transfers.forEach(t => {
       const from = memberById(t.from), to = memberById(t.to);
@@ -481,6 +511,7 @@ function renderAll() {
   renderExpenses();
   renderSettlement();
   renderEventList();
+  renderMySummary();
   renderHistoryMemberSelect();
   renderHistory();
 }
@@ -506,10 +537,12 @@ function renderMembers() {
     box.innerHTML = '<p class="hint">まずメンバーを追加しよう</p>';
     return;
   }
+  const meId = store.meMap[ev.id];
   box.innerHTML = ev.members.map(m => `
-    <span class="chip">
-      <button class="chip-emoji" onclick="cycleEmoji('${m.id}')">${m.emoji}</button>
-      ${esc(m.name)}
+    <span class="chip ${m.id === meId ? 'me' : ''}">
+      ${avatar(m, `onclick="cycleColor('${m.id}')" title="タップで色変更"`)}
+      <button class="chip-name" onclick="toggleMe('${m.id}')" title="タップで自分としてマーク">${esc(m.name)}</button>
+      ${m.id === meId ? '<span class="me-badge">自分</span>' : ''}
       <button class="chip-del" onclick="removeMember('${m.id}')">×</button>
     </span>
   `).join('');
@@ -521,7 +554,7 @@ function renderPayerSelect() {
   const sel = document.getElementById('expPayer');
   const prev = sel.value;
   sel.innerHTML = ev.members.map(m =>
-    `<option value="${m.id}">${m.emoji} ${esc(m.name)}</option>`
+    `<option value="${m.id}">${esc(m.name)}</option>`
   ).join('');
   if (ev.members.some(m => m.id === prev)) sel.value = prev;
 }
@@ -550,7 +583,7 @@ function renderParticipants() {
       <div class="participant-row ${d.on ? '' : 'off'}">
         <label>
           <input type="checkbox" ${d.on ? 'checked' : ''} onchange="toggleParticipant('${m.id}')">
-          ${m.emoji} ${esc(m.name)}
+          ${avatar(m)}${esc(m.name)}
         </label>
         ${control}
       </div>`;
@@ -558,7 +591,7 @@ function renderParticipants() {
   if (splitMode === 'exact') {
     box.innerHTML += `
       <div class="participant-row exact-tools">
-        <button class="btn-secondary btn-sm" onclick="fillRemainder()">🪄 残りを空欄の人で均等に</button>
+        <button class="btn-secondary btn-sm" onclick="fillRemainder()">残りを空欄の人で均等に</button>
       </div>`;
   }
   updateSplitStatus();
@@ -620,7 +653,7 @@ function renderExpenses() {
   memberTabs.innerHTML =
     tab('みんな', !viewMemberId, "setViewMember('')") +
     ev.members.map(m =>
-      tab(`${m.emoji} ${esc(m.name)}`, viewMemberId === m.id, `setViewMember('${m.id}')`)).join('');
+      tab(esc(m.name), viewMemberId === m.id, `setViewMember('${m.id}')`)).join('');
 
   // 日付タブ（記録が2日以上あるときだけ表示）
   dateTabs.innerHTML = dates.length > 1
@@ -647,13 +680,13 @@ function renderExpenses() {
     <div class="expense-item">
       <div class="expense-main">
         <div class="expense-title">${esc(x.title)} <span class="badge">${MODE_LABEL[x.mode]}</span></div>
-        <div class="expense-sub">${fmtDate(x.date)}｜${label(x.payerId)} が支払い → ${x.shares.map(s => esc(memberById(s.memberId)?.name || '？')).join('・')}</div>
+        <div class="expense-sub">${fmtDate(x.date)}｜${esc(nameOf(x.payerId))} が支払い → ${x.shares.map(s => esc(memberById(s.memberId)?.name || '？')).join('・')}</div>
       </div>
       <div class="expense-amount">${yen(x.amount)}
         ${viewMemberId ? `<div class="mine-share">負担 ${yen(shareOf(x))}</div>` : ''}
       </div>
       <div class="expense-btns">
-        <button class="btn-secondary btn-sm" onclick="editExpense('${x.id}')">✏️</button>
+        <button class="btn-secondary btn-sm" onclick="editExpense('${x.id}')">編集</button>
         <button class="btn-delete btn-sm" onclick="deleteExpense('${x.id}')">削除</button>
       </div>
     </div>
@@ -684,7 +717,7 @@ function renderSettlement() {
     const sign = diff > 0 ? '+' : '';
     return `
       <div class="balance-row">
-        <span>${m.emoji} ${esc(m.name)}</span>
+        <span class="person">${avatar(m)}${esc(m.name)}</span>
         <span class="balance-detail">払った ${yen(b.paid)}／負担 ${yen(b.owed)}</span>
         <span class="balance-diff ${cls}">${sign}${yen(diff).replace('¥-', '-¥')}</span>
       </div>`;
@@ -695,13 +728,13 @@ function renderSettlement() {
   if (ev.expenses.length === 0) {
     box.innerHTML = '';
   } else if (transfers.length === 0) {
-    box.innerHTML = '<p class="settle-done">🎉 精算なし！みんなピッタリ</p>';
+    box.innerHTML = '<p class="settle-done">精算なし！みんなピッタリ</p>';
   } else {
     box.innerHTML = transfers.map(t => `
       <div class="settle-row">
-        <span>${label(t.from)}</span>
+        ${person(t.from)}
         <span class="settle-arrow">→</span>
-        <span>${label(t.to)}</span>
+        ${person(t.to)}
         <span class="settle-amount">${yen(t.amount)}</span>
       </div>
     `).join('');
@@ -748,6 +781,47 @@ function renderEventList() {
       <div class="expense-amount">${yen(r.total)}</div>
     </div>
   `).join('');
+}
+
+// ===== じぶんのまとめ（自分マークしたイベントの集計） =====
+function renderMySummary() {
+  const box = document.getElementById('myEvents');
+  const totalEl = document.getElementById('myTotal');
+
+  const rows = [];
+  store.events.forEach(ev => {
+    const meId = store.meMap[ev.id];
+    const me = meId && ev.members.find(m => m.id === meId);
+    if (!me) return;
+    const mine = ev.expenses.filter(x =>
+      x.payerId === me.id || x.shares.some(s => s.memberId === me.id));
+    if (mine.length === 0) return;
+    const owed = mine.reduce((s, x) =>
+      s + (x.shares.find(sh => sh.memberId === me.id)?.amount || 0), 0);
+    const paid = mine.filter(x => x.payerId === me.id).reduce((s, x) => s + x.amount, 0);
+    const dates = mine.map(x => x.date).sort();
+    rows.push({ ev, me, owed, paid, from: dates[0], to: dates[dates.length - 1] });
+  });
+  rows.sort((a, b) => b.to.localeCompare(a.to));
+
+  if (rows.length === 0) {
+    box.innerHTML = '<p class="hint">記録ページのメンバーで自分の名前をタップしてマークすると、参加したイベントの自分の使用額がここに溜まっていくよ</p>';
+    totalEl.textContent = '';
+    return;
+  }
+
+  box.innerHTML = rows.map(r => `
+    <div class="expense-item my-event" onclick="openEvent('${r.ev.id}')">
+      <div class="expense-main">
+        <div class="expense-title">${esc(r.ev.name)}</div>
+        <div class="expense-sub">${fmtDate(r.from)}${r.from !== r.to ? '〜' + fmtDate(r.to).slice(5) : ''}｜${esc(r.me.name)}として参加｜立替 ${yen(r.paid)}</div>
+      </div>
+      <div class="expense-amount">${yen(r.owed)}<div class="mine-share">自分の使用額</div></div>
+    </div>
+  `).join('');
+
+  const owedTotal = rows.reduce((s, r) => s + r.owed, 0);
+  totalEl.textContent = `参加イベント ${rows.length}件／使用額合計 ${yen(owedTotal)}`;
 }
 
 // ===== 記録の検索（全イベント横断） =====
