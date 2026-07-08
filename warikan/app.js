@@ -391,7 +391,11 @@ function updateAdvSummary() {
   const total = ev.members.length;
   const on = ev.members.filter(m => (draft[m.id] ? draft[m.id].on : true)).length;
   const target = (on === total) ? '全員' : `${on}人`;
-  el.textContent = `${date ? fmtDate(date).slice(5) : ''}・${MODE_LABEL[splitMode]}・${target}で割る — 変更 ${advOpen ? '▴' : '▾'}`;
+  el.textContent = `${date ? fmtDate(date).slice(5) : ''}・${MODE_LABEL[splitMode]}・${target}で割る`;
+  const cta = document.getElementById('advCta');
+  if (cta) cta.textContent = advOpen ? '閉じる ▴' : '変更 ▾';
+  const bar = document.getElementById('advToggle');
+  if (bar) bar.classList.toggle('open', advOpen);
 }
 
 // ===== 精算の詳細（収支・端数・返済）の開閉 =====

@@ -107,7 +107,11 @@
           <div id="payerList" class="participant-list" style="display:none"></div>
           <p id="payerStatus" class="hint" style="display:none"></p>
 
-          <button type="button" class="disclosure" id="advToggle" onclick="toggleAdv()"><span id="advSummary"></span></button>
+          <button type="button" class="settings-bar" id="advToggle" onclick="toggleAdv()">
+            <span class="settings-bar-icon">⚙</span>
+            <span class="settings-bar-text" id="advSummary"></span>
+            <span class="settings-bar-cta" id="advCta">変更 ▾</span>
+          </button>
           <div id="expAdvanced" style="display:none">
             <div class="form-row">
               <div class="form-group">
