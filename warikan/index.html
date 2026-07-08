@@ -59,6 +59,10 @@
             <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric">
           </div>
           <div class="form-group">
+            <label for="expDate">日付</label>
+            <input type="date" id="expDate">
+          </div>
+          <div class="form-group">
             <label for="expPayer">払った人</label>
             <select id="expPayer"></select>
           </div>
@@ -107,6 +111,35 @@
           <button class="btn-secondary" onclick="copyShareUrl()">🔗 共有URLをコピー</button>
         </div>
         <p class="hint">共有URLにはこのイベントのデータが入ってるから、開いた人はそのまま続きから使えるよ</p>
+      </section>
+
+      <!-- 記録の検索（全イベント横断） -->
+      <section class="card">
+        <div class="section-header">
+          <h2>📖 記録の検索</h2>
+          <button class="btn-secondary btn-sm" onclick="exportHistoryCSV()">📥 CSV</button>
+        </div>
+        <div class="form-row filter-row">
+          <div class="form-group">
+            <label for="histKeyword">キーワード</label>
+            <input type="text" id="histKeyword" placeholder="内容・イベント名" oninput="renderHistory()">
+          </div>
+          <div class="form-group">
+            <label for="histMember">メンバー</label>
+            <select id="histMember" onchange="renderHistory()"></select>
+          </div>
+          <div class="form-group">
+            <label for="histFrom">いつから</label>
+            <input type="date" id="histFrom" onchange="renderHistory()">
+          </div>
+          <div class="form-group">
+            <label for="histTo">いつまで</label>
+            <input type="date" id="histTo" onchange="renderHistory()">
+          </div>
+        </div>
+        <p class="hint">全イベントの記録から「いつ・誰が・何に・いくら」を横断検索できるよ</p>
+        <div id="historyList"></div>
+        <div id="historyTotal" class="expense-total"></div>
       </section>
 
     </div>

@@ -4,7 +4,20 @@ const EMOJIS = ['🍺','🍕','🍣','🎸','⚽','🎮','🐶','🐱','🦁','�
 
 function loadStore() {
   const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : { events: [], currentEventId: null };
+  const store = data ? JSON.parse(data) : { events: [], currentEventId: null };
+  store.events.forEach(migrateEvent);
+  return store;
+}
+
+// 日付欄がなかった頃の記録には登録時刻から日付を補完する
+function migrateEvent(ev) {
+  ev.expenses.forEach(x => {
+    if (!x.date) x.date = new Date(x.createdAt).toISOString().slice(0, 10);
+  });
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function saveStore() {
@@ -28,6 +41,12 @@ function uid() {
 function yen(n) {
   return '¥' + n.toLocaleString();
 }
+
+function fmtDate(d) {
+  return d ? d.replace(/-/g, '/') : '-';
+}
+
+const MODE_LABEL = { even: '均等', ratio: '傾斜', exact: '金額指定' };
 
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c =>
@@ -174,10 +193,11 @@ function saveExpense() {
   if (!ev) return;
   const title = document.getElementById('expTitle').value.trim();
   const amount = parseInt(document.getElementById('expAmount').value, 10);
+  const date = document.getElementById('expDate').value;
   const payerId = document.getElementById('expPayer').value;
 
-  if (!title || !amount || amount <= 0 || !payerId) {
-    alert('内容・金額・払った人は必須だよ');
+  if (!title || !amount || amount <= 0 || !payerId || !date) {
+    alert('内容・金額・日付・払った人は必須だよ');
     return;
   }
 
@@ -202,7 +222,7 @@ function saveExpense() {
 
   const exp = {
     id: editingExpenseId || uid(),
-    title, amount, payerId,
+    title, amount, date, payerId,
     mode: splitMode,
     weights: splitMode === 'ratio' ? on.map(m => ({ memberId: m.id, w: draft[m.id].weight })) : null,
     shares,
@@ -231,6 +251,7 @@ function editExpense(id) {
   editingExpenseId = id;
   document.getElementById('expTitle').value = exp.title;
   document.getElementById('expAmount').value = exp.amount;
+  document.getElementById('expDate').value = exp.date;
   document.getElementById('expPayer').value = exp.payerId;
   document.getElementById('expenseFormTitle').textContent = '✏️ 支払いを編集中';
   document.getElementById('expSaveBtn').textContent = '💾 更新する';
@@ -255,6 +276,7 @@ function cancelEdit() {
   draft = {};
   document.getElementById('expTitle').value = '';
   document.getElementById('expAmount').value = '';
+  document.getElementById('expDate').value = today();
   document.getElementById('expenseFormTitle').textContent = '📝 支払いを記録';
   document.getElementById('expSaveBtn').textContent = '💾 記録する';
   document.getElementById('expCancelBtn').style.display = 'none';
@@ -349,6 +371,7 @@ function importFromHash() {
   try {
     const ev = decodeEvent(location.hash.slice(3));
     if (!ev.id || !Array.isArray(ev.members)) throw new Error('bad data');
+    migrateEvent(ev);
     const exists = store.events.findIndex(e => e.id === ev.id);
     if (exists >= 0) {
       if (confirm(`「${ev.name}」は既にあるよ。共有された内容で上書きする？`)) {
@@ -412,6 +435,8 @@ function renderAll() {
   renderParticipants();
   renderExpenses();
   renderSettlement();
+  renderHistoryMemberSelect();
+  renderHistory();
 }
 
 function renderEventSelect() {
@@ -505,7 +530,8 @@ function renderExpenses() {
   const ev = currentEvent();
   if (!ev) return;
   const box = document.getElementById('expenseList');
-  const sorted = [...ev.expenses].sort((a, b) => b.createdAt - a.createdAt);
+  const sorted = [...ev.expenses].sort((a, b) =>
+    b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 
   if (sorted.length === 0) {
     box.innerHTML = '<p class="hint">まだ支払い記録がないよ</p>';
@@ -513,12 +539,11 @@ function renderExpenses() {
     return;
   }
 
-  const modeLabel = { even: '均等', ratio: '傾斜', exact: '金額指定' };
   box.innerHTML = sorted.map(x => `
     <div class="expense-item">
       <div class="expense-main">
-        <div class="expense-title">${esc(x.title)} <span class="badge">${modeLabel[x.mode]}</span></div>
-        <div class="expense-sub">${label(x.payerId)} が支払い → ${x.shares.map(s => esc(memberById(s.memberId)?.name || '？')).join('・')}</div>
+        <div class="expense-title">${esc(x.title)} <span class="badge">${MODE_LABEL[x.mode]}</span></div>
+        <div class="expense-sub">${fmtDate(x.date)}｜${label(x.payerId)} が支払い → ${x.shares.map(s => esc(memberById(s.memberId)?.name || '？')).join('・')}</div>
       </div>
       <div class="expense-amount">${yen(x.amount)}</div>
       <div class="expense-btns">
@@ -569,6 +594,105 @@ function renderSettlement() {
   }
 }
 
+// ===== 記録の検索（全イベント横断） =====
+function memberNameIn(ev, id) {
+  const m = ev.members.find(m => m.id === id);
+  return m ? m.name : '？';
+}
+
+// 全イベントの支払いを日付降順でフラットに
+function allRecords() {
+  const rows = [];
+  store.events.forEach(ev => ev.expenses.forEach(x => rows.push({ ev, x })));
+  rows.sort((a, b) =>
+    b.x.date.localeCompare(a.x.date) || b.x.createdAt - a.x.createdAt);
+  return rows;
+}
+
+function filteredRecords() {
+  const kw = document.getElementById('histKeyword').value.trim().toLowerCase();
+  const member = document.getElementById('histMember').value;
+  const from = document.getElementById('histFrom').value;
+  const to = document.getElementById('histTo').value;
+
+  return allRecords().filter(({ ev, x }) => {
+    if (kw && !(x.title.toLowerCase().includes(kw) || ev.name.toLowerCase().includes(kw))) return false;
+    if (member) {
+      const names = [memberNameIn(ev, x.payerId), ...x.shares.map(s => memberNameIn(ev, s.memberId))];
+      if (!names.includes(member)) return false;
+    }
+    if (from && x.date < from) return false;
+    if (to && x.date > to) return false;
+    return true;
+  });
+}
+
+function renderHistoryMemberSelect() {
+  const sel = document.getElementById('histMember');
+  const prev = sel.value;
+  const names = [...new Set(store.events.flatMap(ev => ev.members.map(m => m.name)))];
+  sel.innerHTML = '<option value="">全員</option>' +
+    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if (names.includes(prev)) sel.value = prev;
+}
+
+function renderHistory() {
+  const box = document.getElementById('historyList');
+  const rows = filteredRecords();
+
+  if (rows.length === 0) {
+    box.innerHTML = '<p class="hint">該当する記録がないよ</p>';
+    document.getElementById('historyTotal').textContent = '';
+    return;
+  }
+
+  box.innerHTML = rows.map(({ ev, x }) => `
+    <div class="expense-item">
+      <div class="expense-main">
+        <div class="expense-title">${esc(x.title)} <span class="badge">${esc(ev.name)}</span></div>
+        <div class="expense-sub">${fmtDate(x.date)}｜${esc(memberNameIn(ev, x.payerId))} が支払い → ${x.shares.map(s => esc(memberNameIn(ev, s.memberId))).join('・')}</div>
+      </div>
+      <div class="expense-amount">${yen(x.amount)}</div>
+    </div>
+  `).join('');
+
+  const total = rows.reduce((s, r) => s + r.x.amount, 0);
+  document.getElementById('historyTotal').textContent =
+    `${rows.length}件／合計 ${yen(total)}`;
+}
+
+function exportHistoryCSV() {
+  const rows = filteredRecords();
+  if (rows.length === 0) {
+    alert('エクスポートする記録がないよ');
+    return;
+  }
+
+  const header = ['日付', 'イベント', '内容', '金額', '払った人', '対象', '割り方'];
+  const body = rows.map(({ ev, x }) => [
+    x.date,
+    ev.name,
+    x.title,
+    x.amount,
+    memberNameIn(ev, x.payerId),
+    x.shares.map(s => `${memberNameIn(ev, s.memberId)}(${s.amount}円)`).join(' / '),
+    MODE_LABEL[x.mode]
+  ]);
+
+  const csv = [header, ...body]
+    .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `warikan-${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ===== トースト =====
 let toastTimer = null;
 function toast(message) {
@@ -585,5 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!currentEvent() && store.events.length) {
     store.currentEventId = store.events[0].id;
   }
+  document.getElementById('expDate').value = today();
   renderAll();
 });
