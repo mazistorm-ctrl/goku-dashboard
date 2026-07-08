@@ -13,6 +13,7 @@ function loadStore() {
 
 // 古い形式のデータを補完する（日付なし記録・絵文字時代のメンバー・単独払い専用だった頃の記録）
 function migrateEvent(ev) {
+  ev.repayments = ev.repayments || [];
   ev.expenses.forEach(x => {
     if (!x.date) x.date = new Date(x.createdAt).toISOString().slice(0, 10);
     if (!x.payers) {
@@ -88,7 +89,7 @@ function confirmNewEvent() {
     input.focus();
     return;
   }
-  const ev = { id: uid(), name, roundUnit: 1, members: [], expenses: [] };
+  const ev = { id: uid(), name, roundUnit: 1, members: [], expenses: [], repayments: [] };
   store.events.push(ev);
   store.currentEventId = ev.id;
   saveStore();
@@ -161,7 +162,8 @@ function addMember() {
 function removeMember(id) {
   const ev = currentEvent();
   const used = ev.expenses.some(x =>
-    x.payers.some(p => p.memberId === id) || x.shares.some(s => s.memberId === id));
+    x.payers.some(p => p.memberId === id) || x.shares.some(s => s.memberId === id)) ||
+    ev.repayments.some(r => r.from === id || r.to === id);
   if (used) {
     alert('支払い記録で使われてるメンバーは消せないよ。先に記録を直してね');
     return;
@@ -559,7 +561,7 @@ function deleteExpense(id) {
 // 各自の収支（払った額 - 負担額）
 function computeBalances(ev) {
   const bal = {};
-  ev.members.forEach(m => bal[m.id] = { paid: 0, owed: 0 });
+  ev.members.forEach(m => bal[m.id] = { paid: 0, owed: 0, repOut: 0, repIn: 0 });
   ev.expenses.forEach(x => {
     x.payers.forEach(p => {
       if (bal[p.memberId]) bal[p.memberId].paid += p.amount;
@@ -568,7 +570,17 @@ function computeBalances(ev) {
       if (bal[s.memberId]) bal[s.memberId].owed += s.amount;
     });
   });
+  // 返済: 渡した人はその分プラス、受け取った人はマイナスに寄る
+  (ev.repayments || []).forEach(r => {
+    if (bal[r.from]) bal[r.from].repOut += r.amount;
+    if (bal[r.to]) bal[r.to].repIn += r.amount;
+  });
   return bal;
+}
+
+// 収支の差額（払った + 渡した − 負担 − 受け取った）
+function balanceDiff(b) {
+  return b.paid + b.repOut - b.owed - b.repIn;
 }
 
 // 最小回数になるように貪欲法で送金を組む（unit円単位に丸め）
@@ -577,7 +589,7 @@ function computeSettlements(ev) {
   const bal = computeBalances(ev);
   const arr = ev.members.map(m => ({
     id: m.id,
-    u: Math.round((bal[m.id].paid - bal[m.id].owed) / unit)
+    u: Math.round(balanceDiff(bal[m.id]) / unit)
   }));
   // 丸め誤差で合計がずれたら、絶対値が最大の人に寄せて合計0にする
   const sum = arr.reduce((s, x) => s + x.u, 0);
@@ -915,20 +927,22 @@ function renderSettlement() {
 
   document.getElementById('balanceSummary').innerHTML = ev.members.map(m => {
     const b = bal[m.id];
-    const diff = b.paid - b.owed;
+    const diff = balanceDiff(b);
     const cls = diff > 0 ? 'plus' : diff < 0 ? 'minus' : '';
     const sign = diff > 0 ? '+' : '';
+    const rep = (b.repOut || b.repIn)
+      ? `／渡した ${yen(b.repOut)}／受取 ${yen(b.repIn)}` : '';
     return `
       <div class="balance-row">
         <span class="person">${avatar(m)}${esc(m.name)}</span>
-        <span class="balance-detail">払った ${yen(b.paid)}／負担 ${yen(b.owed)}</span>
+        <span class="balance-detail">払った ${yen(b.paid)}／負担 ${yen(b.owed)}${rep}</span>
         <span class="balance-diff ${cls}">${sign}${yen(diff).replace('¥-', '-¥')}</span>
       </div>`;
   }).join('');
 
   const transfers = computeSettlements(ev);
   const box = document.getElementById('settlementList');
-  if (ev.expenses.length === 0) {
+  if (ev.expenses.length === 0 && ev.repayments.length === 0) {
     box.innerHTML = '';
   } else if (transfers.length === 0) {
     box.innerHTML = '<p class="settle-done">精算なし！みんなピッタリ</p>';
@@ -939,9 +953,86 @@ function renderSettlement() {
         <span class="settle-arrow">→</span>
         ${person(t.to)}
         <span class="settle-amount">${yen(t.amount)}</span>
+        <button class="btn-secondary btn-sm" onclick="quickRepay('${t.from}', '${t.to}', ${t.amount})">渡した</button>
       </div>
     `).join('');
   }
+
+  renderRepayments();
+}
+
+// ===== 返済の記録 =====
+function renderRepayments() {
+  const ev = currentEvent();
+  if (!ev) return;
+
+  // 手動フォームのメンバー選択（選択中の値は維持）
+  ['repayFrom', 'repayTo'].forEach(id => {
+    const sel = document.getElementById(id);
+    const prev = sel.value;
+    sel.innerHTML = ev.members.map(m =>
+      `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+    if (ev.members.some(m => m.id === prev)) sel.value = prev;
+  });
+  if (ev.members.length >= 2 && document.getElementById('repayFrom').value === document.getElementById('repayTo').value) {
+    document.getElementById('repayTo').selectedIndex = 1;
+  }
+
+  const box = document.getElementById('repayList');
+  if (ev.repayments.length === 0) {
+    box.innerHTML = '';
+    return;
+  }
+  box.innerHTML = ev.repayments.map(r => `
+    <div class="expense-item">
+      <div class="expense-main">
+        <div class="expense-sub">${fmtDate(r.date)}｜${esc(nameOf(r.from))} → ${esc(nameOf(r.to))} に渡した</div>
+      </div>
+      <div class="expense-amount">${yen(r.amount)}</div>
+      <div class="expense-btns">
+        <button class="btn-delete btn-sm" onclick="deleteRepayment('${r.id}')">削除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addRepayment(from, to, amount) {
+  const ev = currentEvent();
+  if (!ev) return;
+  if (!from || !to || from === to) {
+    alert('渡した人と受け取った人は別の人を選んでね');
+    return;
+  }
+  if (!(amount > 0)) {
+    alert('金額を入れてね');
+    return;
+  }
+  ev.repayments.push({ id: uid(), from, to, amount, date: today(), createdAt: Date.now() });
+  saveStore();
+  renderSettlement();
+  toast('返済を記録したよ。残りの精算が減った！');
+}
+
+// 精算リストの「渡した」ボタン: その送金をそのまま返済として記録
+function quickRepay(from, to, amount) {
+  if (!confirm(`${nameOf(from)} が ${nameOf(to)} に ${yen(amount)} 渡した？`)) return;
+  addRepayment(from, to, amount);
+}
+
+function recordRepayment() {
+  const from = document.getElementById('repayFrom').value;
+  const to = document.getElementById('repayTo').value;
+  const amount = parseInt(document.getElementById('repayAmount').value, 10);
+  addRepayment(from, to, amount);
+  document.getElementById('repayAmount').value = '';
+}
+
+function deleteRepayment(id) {
+  if (!confirm('この返済記録を削除する？')) return;
+  const ev = currentEvent();
+  ev.repayments = ev.repayments.filter(r => r.id !== id);
+  saveStore();
+  renderSettlement();
 }
 
 // ===== ページタブ =====

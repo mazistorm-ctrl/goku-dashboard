@@ -155,6 +155,18 @@
           </div>
           <div id="balanceSummary"></div>
           <div id="settlementList"></div>
+          <p class="hint">お金を渡したら「渡した」を押すと返済として記録されて、残りの精算が減っていくよ</p>
+
+          <label class="split-label">返済の記録（金額を指定して記録もできる）</label>
+          <div class="repay-form">
+            <select id="repayFrom"></select>
+            <span class="settle-arrow">→</span>
+            <select id="repayTo"></select>
+            <input type="number" id="repayAmount" inputmode="numeric" placeholder="円">
+            <button class="btn-primary btn-sm" onclick="recordRepayment()">渡した</button>
+          </div>
+          <div id="repayList"></div>
+
           <div class="form-actions">
             <button class="btn-primary" onclick="copySettlementText()">LINE用にコピー</button>
             <button class="btn-secondary" onclick="copyShareUrl()">共有URLをコピー</button>

@@ -659,7 +659,8 @@ select:focus {
 .settle-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
   background: #f5f8fb;
   border: 1.5px solid var(--line);
   border-radius: 12px;
@@ -667,6 +668,10 @@ select:focus {
   margin-top: 10px;
   font-size: 15px;
   font-weight: 700;
+}
+
+.settle-row .person {
+  white-space: nowrap;
 }
 
 .settle-arrow {
@@ -685,6 +690,25 @@ select:focus {
   padding: 16px;
   font-weight: 700;
   color: var(--green);
+}
+
+/* 返済の記録 */
+.repay-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.repay-form select {
+  flex: 1 1 90px;
+  min-width: 80px;
+}
+
+.repay-form input {
+  flex: 1 1 90px;
+  min-width: 80px;
+  text-align: right;
 }
 
 /* 空状態 */
