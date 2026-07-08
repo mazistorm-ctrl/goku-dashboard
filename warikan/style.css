@@ -1,0 +1,461 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background: #f4f6f8;
+  color: #2b2b2b;
+  line-height: 1.6;
+}
+
+header {
+  background: linear-gradient(135deg, #ff8c42, #ff5e62);
+  color: #fff;
+  padding: 20px 16px;
+}
+
+.header-inner h1 {
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+
+.header-inner p {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 12px 48px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+.hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+}
+
+/* ボタン */
+.btn-primary,
+.btn-secondary,
+.btn-delete {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #ff5e62;
+  color: #fff;
+}
+
+.btn-primary:active {
+  background: #e04e52;
+}
+
+.btn-secondary {
+  background: #eceff1;
+  color: #444;
+}
+
+.btn-delete {
+  background: #fff0f0;
+  color: #d33;
+}
+
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* フォーム */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label,
+.split-label {
+  font-size: 12px;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  background: #fff;
+  width: 100%;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #ff8c42;
+}
+
+/* イベント */
+.event-row {
+  display: flex;
+  gap: 8px;
+}
+
+.event-row select {
+  flex: 1;
+}
+
+.event-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* メンバー */
+.member-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff4ec;
+  border: 1.5px solid #ffd6b8;
+  border-radius: 999px;
+  padding: 6px 10px 6px 6px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.chip-emoji {
+  border: none;
+  background: #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.chip-del {
+  border: none;
+  background: none;
+  color: #c96;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.member-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* 割り方タブ */
+.split-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.split-tab {
+  flex: 1;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 4px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #666;
+}
+
+.split-tab.active {
+  border-color: #ff5e62;
+  background: #fff0f0;
+  color: #ff5e62;
+  font-weight: bold;
+}
+
+/* 対象メンバー */
+.participant-list {
+  border: 1.5px solid #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.participant-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.participant-row:last-child {
+  border-bottom: none;
+}
+
+.participant-row.off {
+  opacity: 0.45;
+}
+
+.participant-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.participant-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ff5e62;
+}
+
+.weight-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weight-control button {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.weight-control b {
+  min-width: 40px;
+  text-align: center;
+  color: #ff5e62;
+}
+
+.exact-input {
+  width: 100px !important;
+  text-align: right;
+}
+
+/* 支払い一覧 */
+.expense-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.expense-item:last-child {
+  border-bottom: none;
+}
+
+.expense-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.expense-title {
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.expense-sub {
+  font-size: 12px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: normal;
+  background: #eceff1;
+  color: #667;
+  border-radius: 6px;
+  padding: 2px 6px;
+  vertical-align: middle;
+}
+
+.expense-amount {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.expense-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.expense-total {
+  margin-top: 12px;
+  text-align: right;
+  font-weight: bold;
+  color: #555;
+}
+
+/* 精算 */
+.round-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #777;
+}
+
+.round-row select {
+  width: auto;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.balance-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.balance-row > span:first-child {
+  font-weight: bold;
+  min-width: 90px;
+}
+
+.balance-detail {
+  flex: 1;
+  font-size: 12px;
+  color: #999;
+}
+
+.balance-diff {
+  font-weight: bold;
+}
+
+.balance-diff.plus {
+  color: #1a9c5d;
+}
+
+.balance-diff.minus {
+  color: #d33;
+}
+
+.settle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fbff;
+  border: 1.5px solid #dbe9ff;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.settle-arrow {
+  color: #4a90d9;
+}
+
+.settle-amount {
+  margin-left: auto;
+  color: #1a5cb0;
+  font-size: 17px;
+}
+
+.settle-done {
+  text-align: center;
+  padding: 16px;
+  font-weight: bold;
+  color: #1a9c5d;
+}
+
+/* 空状態 */
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 40px 16px;
+}
+
+/* トースト */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.25s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 90vw;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

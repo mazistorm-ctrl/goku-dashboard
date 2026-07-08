@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ワリカン〜友達間割り勘〜</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <h1>🍻 ワリカン</h1>
+      <p>ログイン不要・友達間の割り勘精算</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- イベント選択 -->
+    <section class="card">
+      <div class="section-header">
+        <h2>📅 イベント</h2>
+        <div class="event-actions">
+          <button class="btn-secondary btn-sm" onclick="renameEvent()">✏️</button>
+          <button class="btn-secondary btn-sm" onclick="deleteEvent()">🗑</button>
+        </div>
+      </div>
+      <div class="event-row">
+        <select id="eventSelect" onchange="switchEvent(this.value)"></select>
+        <button class="btn-primary btn-sm" onclick="newEvent()">＋新規</button>
+      </div>
+    </section>
+
+    <div id="appBody">
+
+      <!-- メンバー -->
+      <section class="card">
+        <h2>👥 メンバー</h2>
+        <div id="memberChips" class="member-chips"></div>
+        <div class="member-add-row">
+          <input type="text" id="memberName" placeholder="名前（例：たけし）" maxlength="12"
+                 onkeydown="if(event.key==='Enter')addMember()">
+          <button class="btn-primary btn-sm" onclick="addMember()">追加</button>
+        </div>
+        <p class="hint">アイコンをタップすると絵文字が変わるよ</p>
+      </section>
+
+      <!-- 支払い入力 -->
+      <section class="card">
+        <h2 id="expenseFormTitle">📝 支払いを記録</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="expTitle">何に使った？</label>
+            <input type="text" id="expTitle" placeholder="例：1軒目の居酒屋">
+          </div>
+          <div class="form-group">
+            <label for="expAmount">金額（円）</label>
+            <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label for="expPayer">払った人</label>
+            <select id="expPayer"></select>
+          </div>
+        </div>
+
+        <label class="split-label">割り方</label>
+        <div class="split-tabs">
+          <button id="tab-even"  class="split-tab active" onclick="setSplitMode('even')">均等</button>
+          <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜（多め/少なめ）</button>
+          <button id="tab-exact" class="split-tab" onclick="setSplitMode('exact')">金額指定</button>
+        </div>
+
+        <div id="participantList" class="participant-list"></div>
+        <p id="splitStatus" class="hint"></p>
+
+        <div class="form-actions">
+          <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">💾 記録する</button>
+          <button class="btn-secondary" id="expCancelBtn" onclick="cancelEdit()" style="display:none">キャンセル</button>
+        </div>
+      </section>
+
+      <!-- 支払い一覧 -->
+      <section class="card">
+        <h2>📋 支払い一覧</h2>
+        <div id="expenseList"></div>
+        <div id="expenseTotal" class="expense-total"></div>
+      </section>
+
+      <!-- 精算 -->
+      <section class="card">
+        <div class="section-header">
+          <h2>💸 精算</h2>
+          <div class="round-row">
+            <label for="roundUnit">端数</label>
+            <select id="roundUnit" onchange="setRoundUnit(this.value)">
+              <option value="1">1円単位</option>
+              <option value="10">10円単位</option>
+              <option value="100">100円単位</option>
+            </select>
+          </div>
+        </div>
+        <div id="balanceSummary"></div>
+        <div id="settlementList"></div>
+        <div class="form-actions">
+          <button class="btn-primary" onclick="copySettlementText()">📋 LINE用にコピー</button>
+          <button class="btn-secondary" onclick="copyShareUrl()">🔗 共有URLをコピー</button>
+        </div>
+        <p class="hint">共有URLにはこのイベントのデータが入ってるから、開いた人はそのまま続きから使えるよ</p>
+      </section>
+
+    </div>
+
+    <div id="emptyState" class="card empty-state" style="display:none">
+      <p>まだイベントがないよ。<br>「＋新規」から飲み会や旅行を作ろう！</p>
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
