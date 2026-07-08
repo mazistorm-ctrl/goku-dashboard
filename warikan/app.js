@@ -822,4 +822,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('expDate').value = today();
   renderAll();
+
+  // PWA: ホーム画面に追加してアプリとして使えるようにする
+  if ('serviceWorker' in navigator &&
+      (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
 });

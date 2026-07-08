@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ワリカン〜友達間割り勘〜</title>
+  <meta name="theme-color" content="#ff5e62">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ワリカン">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -33,6 +40,9 @@
     </section>
 
     <div id="appBody">
+
+     <div class="columns">
+      <div class="col">
 
       <!-- メンバー -->
       <section class="card">
@@ -84,6 +94,9 @@
         </div>
       </section>
 
+      </div>
+      <div class="col">
+
       <!-- 支払い一覧 -->
       <section class="card">
         <h2>📋 支払い一覧</h2>
@@ -114,6 +127,9 @@
         </div>
         <p class="hint">共有URLにはこのイベントのデータが入ってるから、開いた人はそのまま続きから使えるよ</p>
       </section>
+
+      </div>
+     </div>
 
       <!-- 記録の検索（全イベント横断） -->
       <section class="card">

@@ -131,6 +131,7 @@ h2 {
 
 input[type="text"],
 input[type="number"],
+input[type="date"],
 select {
   border: 1.5px solid #ddd;
   border-radius: 10px;
@@ -138,6 +139,15 @@ select {
   font-size: 15px;
   background: #fff;
   width: 100%;
+  font-family: inherit;
+  color: inherit;
+}
+
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px;
+  line-height: 1.4;
 }
 
 input:focus,
@@ -511,5 +521,31 @@ select:focus {
 @media (max-width: 480px) {
   .form-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* PC: 2カラムで縦スクロールを減らす */
+@media (min-width: 960px) {
+  main {
+    max-width: 1200px;
+    padding: 24px 20px 64px;
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 0 16px;
+    align-items: start;
+  }
+
+  .header-inner,
+  main > .card {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .filter-row {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
   }
 }

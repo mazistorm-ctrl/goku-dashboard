@@ -1,0 +1,26 @@
+{
+  "name": "ワリカン〜友達間割り勘〜",
+  "short_name": "ワリカン",
+  "description": "ログイン不要・友達間の割り勘精算アプリ",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#ff5e62",
+  "background_color": "#f4f6f8",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
