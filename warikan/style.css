@@ -549,6 +549,28 @@ select:focus {
     padding: 24px 20px 64px;
   }
 
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* イベント選択を1行のツールバーに */
+  #eventCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+  }
+
+  #eventCard .section-header {
+    margin-bottom: 0;
+    gap: 10px;
+  }
+
+  #eventCard .event-row {
+    flex: 1;
+  }
+
   .columns {
     display: grid;
     grid-template-columns: 1fr 1.1fr;
@@ -556,14 +578,20 @@ select:focus {
     align-items: start;
   }
 
-  .header-inner,
-  main > .card {
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
+  /* まとめと検索は横並び */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 0 16px;
+    align-items: start;
   }
 
   .filter-row {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  }
+
+  /* カード内の見出し余白をそろえる */
+  .card {
+    padding: 20px;
   }
 }
