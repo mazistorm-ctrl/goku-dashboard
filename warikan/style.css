@@ -28,6 +28,7 @@ header {
   background: #1d2b3a;
   color: #fff;
   padding: 22px 16px 20px;
+  text-align: center;
 }
 
 .logo {
@@ -45,14 +46,8 @@ header {
 }
 
 .logo-mark {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--accent);
-  margin-left: 5px;
-  align-self: flex-end;
-  margin-bottom: 6px;
-  box-shadow: 0 0 0 3px rgba(232, 96, 76, 0.25);
+  color: var(--accent);
+  margin-left: 2px;
 }
 
 .header-inner p {
