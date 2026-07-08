@@ -354,6 +354,24 @@ select:focus {
   text-align: right;
 }
 
+.me-select {
+  width: auto !important;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.my-event {
+  cursor: pointer;
+  border-radius: 10px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.my-event:hover {
+  background: #fff8f4;
+}
+
 .expense-item {
   display: flex;
   align-items: center;

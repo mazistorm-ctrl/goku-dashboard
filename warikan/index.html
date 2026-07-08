@@ -131,6 +131,17 @@
       </div>
      </div>
 
+      <!-- じぶんのまとめ（全イベント横断） -->
+      <section class="card">
+        <div class="section-header">
+          <h2>🙋 じぶんのまとめ</h2>
+          <select id="meSelect" class="me-select" onchange="setMe(this.value)"></select>
+        </div>
+        <p class="hint">自分の名前を選ぶと、自分が参加した飲み会だけ「飲み会名・日付・自分が使った金額」で見れるよ。自分がいない飲み会は出てこない</p>
+        <div id="myEvents"></div>
+        <div id="myTotal" class="expense-total"></div>
+      </section>
+
       <!-- 記録の検索（全イベント横断） -->
       <section class="card">
         <div class="section-header">
