@@ -30,14 +30,29 @@ header {
   padding: 22px 16px 20px;
 }
 
-.header-inner h1 {
-  font-size: 21px;
+.logo {
+  font-family: 'M PLUS Rounded 1c', "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+  font-size: 27px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: baseline;
+  line-height: 1.2;
 }
 
-.accent-dot {
+.logo-accent {
   color: var(--accent);
+}
+
+.logo-mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: 5px;
+  align-self: flex-end;
+  margin-bottom: 6px;
+  box-shadow: 0 0 0 3px rgba(232, 96, 76, 0.25);
 }
 
 .header-inner p {
@@ -63,8 +78,9 @@ main {
 }
 
 h2 {
+  font-family: 'M PLUS Rounded 1c', "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.04em;
   margin-bottom: 12px;
   display: flex;
@@ -264,10 +280,10 @@ select:focus {
   border-radius: 9px;
   padding: 11px 4px;
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   color: var(--muted);
-  font-family: inherit;
+  font-family: 'M PLUS Rounded 1c', "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
   white-space: nowrap;
 }
 

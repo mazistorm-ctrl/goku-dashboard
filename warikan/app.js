@@ -1143,7 +1143,7 @@ function exportHistoryCSV() {
 
 // ===== 全データ削除 =====
 function resetAll() {
-  if (!confirm('この端末に保存されたワリカンのデータ（全イベント・全記録）を削除する？')) return;
+  if (!confirm('この端末に保存されたワリピタのデータ（全イベント・全記録）を削除する？')) return;
   if (!confirm('本当に削除する？元に戻せないよ')) return;
   localStorage.removeItem(STORAGE_KEY);
   store = loadStore();

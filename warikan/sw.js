@@ -1,6 +1,6 @@
-// ワリカン Service Worker
+// ワリピタ Service Worker
 // ネット優先で取得しつつキャッシュを更新、オフライン時はキャッシュから返す
-const CACHE = 'warikan-v4';
+const CACHE = 'warikan-v5';
 const ASSETS = [
   './',
   './index.html',
