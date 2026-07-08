@@ -103,6 +103,13 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// 日付の初期値: そのイベントで最後に記録した日付を引き継ぐ（新規イベントは今日）。
+// 飲み会は同じ日付で連続入力、旅行は日付を変えた時点から引き継がれる
+function defaultDateForEvent(ev) {
+  if (!ev || ev.expenses.length === 0) return today();
+  return ev.expenses[ev.expenses.length - 1].date;
+}
+
 function saveStore() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
   syncEventToCloud(currentEvent());
@@ -218,6 +225,7 @@ function switchEvent(id) {
   viewMemberId = null;
   expenseGateWasOpen = null;
   cancelNewEvent();
+  document.getElementById('expDate').value = defaultDateForEvent(currentEvent());
   renderAll();
   subscribeToCurrentEvent();
 }
@@ -620,7 +628,7 @@ function cancelEdit() {
   payerDraft = {};
   document.getElementById('expTitle').value = '';
   document.getElementById('expAmount').value = '';
-  document.getElementById('expDate').value = today();
+  document.getElementById('expDate').value = defaultDateForEvent(currentEvent());
   document.getElementById('expenseFormTitle').textContent = '支払いを記録';
   document.getElementById('expSaveBtn').textContent = '記録する';
   document.getElementById('expCancelBtn').style.display = 'none';
@@ -1445,7 +1453,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!currentEvent() && store.events.length) {
     store.currentEventId = store.events[0].id;
   }
-  document.getElementById('expDate').value = today();
+  document.getElementById('expDate').value = defaultDateForEvent(currentEvent());
   renderAll();
   subscribeToCurrentEvent();
 

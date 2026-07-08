@@ -862,6 +862,21 @@ select:focus {
     align-items: start;
   }
 
+  /* 記録・精算ページ: 左にメンバー+精算、右に入力フォーム */
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    grid-template-areas:
+      "members form"
+      "settle  form";
+    gap: 0 16px;
+    align-items: start;
+  }
+
+  .area-members { grid-area: members; }
+  .area-form    { grid-area: form; }
+  .area-settle  { grid-area: settle; }
+
   /* 一覧・精算ページは読みやすい幅に */
   .page-narrow {
     max-width: 760px;

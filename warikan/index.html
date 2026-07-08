@@ -50,20 +50,18 @@
 
       <!-- ページタブ -->
       <nav class="page-tabs">
-        <button class="page-tab active" data-page="input" onclick="switchPage('input')">記録する</button>
+        <button class="page-tab active" data-page="input" onclick="switchPage('input')">記録・精算</button>
         <button class="page-tab" data-page="list" onclick="switchPage('list')">イベント内訳</button>
-        <button class="page-tab" data-page="settle" onclick="switchPage('settle')">精算</button>
         <button class="page-tab" data-page="history" onclick="switchPage('history')">履歴</button>
       </nav>
 
-      <!-- ページ: 記録 -->
+      <!-- ページ: 記録・精算 -->
       <div class="page active" id="page-input">
        <div id="stepGuide" class="step-guide"></div>
-       <div class="columns">
-        <div class="col">
+       <div class="input-grid">
 
         <!-- メンバー -->
-        <section class="card">
+        <section class="card area-members">
           <h2>メンバー</h2>
           <div id="memberChips" class="member-chips"></div>
           <div class="member-add-row">
@@ -78,11 +76,8 @@
           <p class="hint">じぶんを選ぶと、履歴タブの「じぶんのまとめ」に自分の使用額がまとまるよ。丸をタップで色変更</p>
         </section>
 
-        </div>
-        <div class="col">
-
         <!-- 支払い入力 -->
-        <section class="card">
+        <section class="card area-form">
           <h2 id="expenseFormTitle">支払いを記録</h2>
 
           <div id="expenseFormGate" class="gate-message" style="display:none">
@@ -133,24 +128,8 @@
           </div>
         </section>
 
-        </div>
-       </div>
-      </div>
-
-      <!-- ページ: 一覧 -->
-      <div class="page page-narrow" id="page-list">
-        <section class="card">
-          <h2>イベント内訳</h2>
-          <div id="memberTabs" class="view-tabs"></div>
-          <div id="dateTabs" class="view-tabs"></div>
-          <div id="expenseList"></div>
-          <div id="expenseTotal" class="expense-total"></div>
-        </section>
-      </div>
-
-      <!-- ページ: 精算 -->
-      <div class="page page-narrow" id="page-settle">
-        <section class="card">
+        <!-- 精算（記録するとすぐここに反映される） -->
+        <section class="card area-settle">
           <div class="section-header">
             <h2>精算</h2>
             <div class="round-row">
@@ -180,7 +159,20 @@
             <button class="btn-primary" onclick="copySettlementText()">LINE用にコピー</button>
             <button class="btn-secondary" onclick="copyShareUrl()">共有URLをコピー</button>
           </div>
-          <p class="hint">共有URLにはこのイベントのデータが入ってるから、開いた人はそのまま続きから使えるよ</p>
+          <p class="hint">共有URLを送ると、友達も同じイベントを見たり記録したりできるよ</p>
+        </section>
+
+       </div>
+      </div>
+
+      <!-- ページ: 一覧 -->
+      <div class="page page-narrow" id="page-list">
+        <section class="card">
+          <h2>イベント内訳</h2>
+          <div id="memberTabs" class="view-tabs"></div>
+          <div id="dateTabs" class="view-tabs"></div>
+          <div id="expenseList"></div>
+          <div id="expenseTotal" class="expense-total"></div>
         </section>
       </div>
 
