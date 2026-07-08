@@ -118,6 +118,10 @@ h2 {
   flex-direction: column;
 }
 
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
 .form-group label,
 .split-label {
   font-size: 12px;
