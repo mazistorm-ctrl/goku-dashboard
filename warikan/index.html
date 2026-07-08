@@ -73,7 +73,7 @@
             <label for="meSelect">じぶん（この端末の持ち主）</label>
             <select id="meSelect" onchange="setMeFromSelect(this.value)"></select>
           </div>
-          <p class="hint">じぶんを選ぶと、履歴タブの「じぶんのまとめ」に自分の使用額がまとまるよ。丸をタップで色変更</p>
+          <p class="hint">じぶんを選ぶと履歴タブに自分の使用額がまとまるよ</p>
         </section>
 
         <!-- 支払い入力 -->
@@ -96,10 +96,6 @@
               <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric" oninput="updateSplitStatus();updatePayerStatus()">
             </div>
             <div class="form-group">
-              <label for="expDate">日付</label>
-              <input type="date" id="expDate">
-            </div>
-            <div class="form-group">
               <div class="payer-label-row">
                 <label for="expPayer">払った人</label>
                 <button type="button" class="link-btn" id="payerModeToggle" onclick="togglePayerMode()">複数人で払った</button>
@@ -111,15 +107,25 @@
           <div id="payerList" class="participant-list" style="display:none"></div>
           <p id="payerStatus" class="hint" style="display:none"></p>
 
-          <label class="split-label">割り方</label>
-          <div class="split-tabs">
-            <button id="tab-even"  class="split-tab active" onclick="setSplitMode('even')">均等</button>
-            <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜</button>
-            <button id="tab-exact" class="split-tab" onclick="setSplitMode('exact')">金額指定</button>
-          </div>
+          <button type="button" class="disclosure" id="advToggle" onclick="toggleAdv()"><span id="advSummary"></span></button>
+          <div id="expAdvanced" style="display:none">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="expDate">日付</label>
+                <input type="date" id="expDate" onchange="updateAdvSummary()">
+              </div>
+            </div>
 
-          <div id="participantList" class="participant-list"></div>
-          <p id="splitStatus" class="hint"></p>
+            <label class="split-label">割り方</label>
+            <div class="split-tabs">
+              <button id="tab-even"  class="split-tab active" onclick="setSplitMode('even')">均等</button>
+              <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜</button>
+              <button id="tab-exact" class="split-tab" onclick="setSplitMode('exact')">金額指定</button>
+            </div>
+
+            <div id="participantList" class="participant-list"></div>
+            <p id="splitStatus" class="hint"></p>
+          </div>
 
           <div class="form-actions">
             <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">記録する</button>
@@ -130,8 +136,11 @@
 
         <!-- 精算（記録するとすぐここに反映される） -->
         <section class="card area-settle">
-          <div class="section-header">
-            <h2>精算</h2>
+          <h2>精算</h2>
+          <div id="settlementList"></div>
+
+          <button type="button" class="disclosure" id="settleDetailToggle" onclick="toggleSettleDetail()">みんなの収支・端数・返済の記録 ▾</button>
+          <div id="settleDetail" style="display:none">
             <div class="round-row">
               <label for="roundUnit">端数</label>
               <select id="roundUnit" onchange="setRoundUnit(this.value)">
@@ -140,26 +149,23 @@
                 <option value="100">100円単位</option>
               </select>
             </div>
-          </div>
-          <div id="balanceSummary"></div>
-          <div id="settlementList"></div>
-          <p class="hint">お金を渡したら「渡した」を押すと返済として記録されて、残りの精算が減っていくよ</p>
+            <div id="balanceSummary"></div>
 
-          <label class="split-label">返済の記録（金額を指定して記録もできる）</label>
-          <div class="repay-form">
-            <select id="repayFrom"></select>
-            <span class="settle-arrow">→</span>
-            <select id="repayTo"></select>
-            <input type="number" id="repayAmount" inputmode="numeric" placeholder="円">
-            <button class="btn-primary btn-sm" onclick="recordRepayment()">渡した</button>
+            <label class="split-label">返済の記録（実際にお金を渡したら記録。精算リストの「渡した」でも記録される）</label>
+            <div class="repay-form">
+              <select id="repayFrom"></select>
+              <span class="settle-arrow">→</span>
+              <select id="repayTo"></select>
+              <input type="number" id="repayAmount" inputmode="numeric" placeholder="円">
+              <button class="btn-primary btn-sm" onclick="recordRepayment()">渡した</button>
+            </div>
+            <div id="repayList"></div>
           </div>
-          <div id="repayList"></div>
 
           <div class="form-actions">
             <button class="btn-primary" onclick="copySettlementText()">LINE用にコピー</button>
             <button class="btn-secondary" onclick="copyShareUrl()">共有URLをコピー</button>
           </div>
-          <p class="hint">共有URLを送ると、友達も同じイベントを見たり記録したりできるよ</p>
         </section>
 
        </div>

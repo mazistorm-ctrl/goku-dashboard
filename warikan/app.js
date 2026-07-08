@@ -368,6 +368,43 @@ function stepWeight(id, delta) {
   renderParticipants();
 }
 
+// ===== 詳細設定の開閉（日付・割り方・対象者） =====
+let advOpen = false;
+
+function toggleAdv() {
+  advOpen = !advOpen;
+  renderAdv();
+}
+
+function renderAdv() {
+  const box = document.getElementById('expAdvanced');
+  if (box) box.style.display = advOpen ? '' : 'none';
+  updateAdvSummary();
+}
+
+// 畳んでいる時も今の設定が一目でわかる1行サマリー
+function updateAdvSummary() {
+  const ev = currentEvent();
+  const el = document.getElementById('advSummary');
+  if (!ev || !el) return;
+  const date = document.getElementById('expDate').value;
+  const total = ev.members.length;
+  const on = ev.members.filter(m => (draft[m.id] ? draft[m.id].on : true)).length;
+  const target = (on === total) ? '全員' : `${on}人`;
+  el.textContent = `${date ? fmtDate(date).slice(5) : ''}・${MODE_LABEL[splitMode]}・${target}で割る — 変更 ${advOpen ? '▴' : '▾'}`;
+}
+
+// ===== 精算の詳細（収支・端数・返済）の開閉 =====
+let settleDetailOpen = false;
+
+function toggleSettleDetail() {
+  settleDetailOpen = !settleDetailOpen;
+  const box = document.getElementById('settleDetail');
+  if (box) box.style.display = settleDetailOpen ? '' : 'none';
+  document.getElementById('settleDetailToggle').textContent =
+    `みんなの収支・端数・返済の記録 ${settleDetailOpen ? '▴' : '▾'}`;
+}
+
 // 入力中のフォーカスを保つため、この2つは一覧を再描画しない
 function setWeight(id, value) {
   ensureDraft(id).weight = parseFloat(value);
@@ -617,6 +654,8 @@ function editExpense(id) {
     };
   });
   setSplitMode(exp.mode);
+  advOpen = true;
+  renderAdv();
   switchPage('input');
   document.getElementById('expTitle').scrollIntoView({ behavior: 'smooth' });
 }
@@ -967,6 +1006,7 @@ function renderParticipants() {
       </div>`;
   }
   updateSplitStatus();
+  updateAdvSummary();
 }
 
 function updateSplitStatus() {

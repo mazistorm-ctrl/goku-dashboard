@@ -325,6 +325,32 @@ select:focus {
   font-size: 14px;
 }
 
+/* 詳細の折りたたみ（普段使わない設定を畳んでおく） */
+.disclosure {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-top: 1px dashed var(--line);
+  margin-top: 12px;
+  padding: 10px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.disclosure:hover {
+  color: var(--ink);
+}
+
+#expAdvanced,
+#settleDetail {
+  padding-top: 8px;
+}
+
 .gate-message .hint {
   margin-top: 6px;
 }
