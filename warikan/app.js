@@ -48,6 +48,14 @@ function applyRemoteEvent(remoteEv) {
   if (store.currentEventId === remoteEv.id) renderAll();
 }
 
+// タブに戻ってきた時などに最新を取り直す（リアルタイムの取りこぼし対策）
+async function refreshCurrentFromCloud() {
+  const ev = currentEvent();
+  if (!ev) return;
+  const remote = await fetchEventFromCloud(ev.id);
+  if (remote) applyRemoteEvent(remote);
+}
+
 // 今開いているイベントのリアルタイム購読を張り直す
 function subscribeToCurrentEvent() {
   if (!sb) return;
@@ -1398,6 +1406,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('expDate').value = today();
   renderAll();
   subscribeToCurrentEvent();
+
+  // アプリを開いたまま共有リンクを踏んだとき（ページ再読み込みが起きないケース）
+  window.addEventListener('hashchange', () => importFromHash());
+  // タブ/アプリに戻ってきたら最新を取り直す
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshCurrentFromCloud();
+  });
 
   // PWA: ホーム画面に追加してアプリとして使えるようにする
   if ('serviceWorker' in navigator &&
