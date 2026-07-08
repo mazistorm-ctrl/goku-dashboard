@@ -41,139 +41,157 @@
 
     <div id="appBody">
 
-     <div class="columns">
-      <div class="col">
+      <!-- ページタブ -->
+      <nav class="page-tabs">
+        <button class="page-tab active" data-page="input" onclick="switchPage('input')">📝 記録</button>
+        <button class="page-tab" data-page="list" onclick="switchPage('list')">📋 一覧</button>
+        <button class="page-tab" data-page="settle" onclick="switchPage('settle')">💸 精算</button>
+        <button class="page-tab" data-page="history" onclick="switchPage('history')">📅 履歴</button>
+      </nav>
 
-      <!-- メンバー -->
-      <section class="card">
-        <h2>👥 メンバー</h2>
-        <div id="memberChips" class="member-chips"></div>
-        <div class="member-add-row">
-          <input type="text" id="memberName" placeholder="名前（例：たけし）" maxlength="12"
-                 onkeydown="if(event.key==='Enter')addMember()">
-          <button class="btn-primary btn-sm" onclick="addMember()">追加</button>
-        </div>
-        <p class="hint">アイコンをタップすると絵文字が変わるよ</p>
-      </section>
+      <!-- ページ: 記録 -->
+      <div class="page active" id="page-input">
+       <div class="columns">
+        <div class="col">
 
-      <!-- 支払い入力 -->
-      <section class="card">
-        <h2 id="expenseFormTitle">📝 支払いを記録</h2>
-        <div class="form-row">
-          <div class="form-group form-group-full">
-            <label for="expTitle">何に使った？</label>
-            <input type="text" id="expTitle" placeholder="例：1軒目の居酒屋">
+        <!-- メンバー -->
+        <section class="card">
+          <h2>👥 メンバー</h2>
+          <div id="memberChips" class="member-chips"></div>
+          <div class="member-add-row">
+            <input type="text" id="memberName" placeholder="名前（例：たけし）" maxlength="12"
+                   onkeydown="if(event.key==='Enter')addMember()">
+            <button class="btn-primary btn-sm" onclick="addMember()">追加</button>
           </div>
-          <div class="form-group">
-            <label for="expAmount">金額（円）</label>
-            <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric" oninput="updateSplitStatus()">
-          </div>
-          <div class="form-group">
-            <label for="expDate">日付</label>
-            <input type="date" id="expDate">
-          </div>
-          <div class="form-group">
-            <label for="expPayer">払った人</label>
-            <select id="expPayer"></select>
-          </div>
+          <p class="hint">アイコンをタップすると絵文字が変わるよ</p>
+        </section>
+
         </div>
+        <div class="col">
 
-        <label class="split-label">割り方</label>
-        <div class="split-tabs">
-          <button id="tab-even"  class="split-tab active" onclick="setSplitMode('even')">均等</button>
-          <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜（多め/少なめ）</button>
-          <button id="tab-exact" class="split-tab" onclick="setSplitMode('exact')">金額指定</button>
+        <!-- 支払い入力 -->
+        <section class="card">
+          <h2 id="expenseFormTitle">📝 支払いを記録</h2>
+          <div class="form-row">
+            <div class="form-group form-group-full">
+              <label for="expTitle">何に使った？</label>
+              <input type="text" id="expTitle" placeholder="例：1軒目の居酒屋">
+            </div>
+            <div class="form-group">
+              <label for="expAmount">金額（円）</label>
+              <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric" oninput="updateSplitStatus()">
+            </div>
+            <div class="form-group">
+              <label for="expDate">日付</label>
+              <input type="date" id="expDate">
+            </div>
+            <div class="form-group">
+              <label for="expPayer">払った人</label>
+              <select id="expPayer"></select>
+            </div>
+          </div>
+
+          <label class="split-label">割り方</label>
+          <div class="split-tabs">
+            <button id="tab-even"  class="split-tab active" onclick="setSplitMode('even')">均等</button>
+            <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜（多め/少なめ）</button>
+            <button id="tab-exact" class="split-tab" onclick="setSplitMode('exact')">金額指定</button>
+          </div>
+
+          <div id="participantList" class="participant-list"></div>
+          <p id="splitStatus" class="hint"></p>
+
+          <div class="form-actions">
+            <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">💾 記録する</button>
+            <button class="btn-secondary" id="expCancelBtn" onclick="cancelEdit()" style="display:none">キャンセル</button>
+          </div>
+        </section>
+
         </div>
-
-        <div id="participantList" class="participant-list"></div>
-        <p id="splitStatus" class="hint"></p>
-
-        <div class="form-actions">
-          <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">💾 記録する</button>
-          <button class="btn-secondary" id="expCancelBtn" onclick="cancelEdit()" style="display:none">キャンセル</button>
-        </div>
-      </section>
-
+       </div>
       </div>
-      <div class="col">
 
-      <!-- 支払い一覧 -->
-      <section class="card">
-        <h2>📋 支払い一覧</h2>
-        <div id="memberTabs" class="view-tabs"></div>
-        <div id="dateTabs" class="view-tabs"></div>
-        <div id="expenseList"></div>
-        <div id="expenseTotal" class="expense-total"></div>
-      </section>
-
-      <!-- 精算 -->
-      <section class="card">
-        <div class="section-header">
-          <h2>💸 精算</h2>
-          <div class="round-row">
-            <label for="roundUnit">端数</label>
-            <select id="roundUnit" onchange="setRoundUnit(this.value)">
-              <option value="1">1円単位</option>
-              <option value="10">10円単位</option>
-              <option value="100">100円単位</option>
-            </select>
-          </div>
-        </div>
-        <div id="balanceSummary"></div>
-        <div id="settlementList"></div>
-        <div class="form-actions">
-          <button class="btn-primary" onclick="copySettlementText()">📋 LINE用にコピー</button>
-          <button class="btn-secondary" onclick="copyShareUrl()">🔗 共有URLをコピー</button>
-        </div>
-        <p class="hint">共有URLにはこのイベントのデータが入ってるから、開いた人はそのまま続きから使えるよ</p>
-      </section>
-
+      <!-- ページ: 一覧 -->
+      <div class="page page-narrow" id="page-list">
+        <section class="card">
+          <h2>📋 支払い一覧</h2>
+          <div id="memberTabs" class="view-tabs"></div>
+          <div id="dateTabs" class="view-tabs"></div>
+          <div id="expenseList"></div>
+          <div id="expenseTotal" class="expense-total"></div>
+        </section>
       </div>
-     </div>
 
-     <div class="bottom-grid">
+      <!-- ページ: 精算 -->
+      <div class="page page-narrow" id="page-settle">
+        <section class="card">
+          <div class="section-header">
+            <h2>💸 精算</h2>
+            <div class="round-row">
+              <label for="roundUnit">端数</label>
+              <select id="roundUnit" onchange="setRoundUnit(this.value)">
+                <option value="1">1円単位</option>
+                <option value="10">10円単位</option>
+                <option value="100">100円単位</option>
+              </select>
+            </div>
+          </div>
+          <div id="balanceSummary"></div>
+          <div id="settlementList"></div>
+          <div class="form-actions">
+            <button class="btn-primary" onclick="copySettlementText()">📋 LINE用にコピー</button>
+            <button class="btn-secondary" onclick="copyShareUrl()">🔗 共有URLをコピー</button>
+          </div>
+          <p class="hint">共有URLにはこのイベントのデータが入ってるから、開いた人はそのまま続きから使えるよ</p>
+        </section>
+      </div>
 
-      <!-- じぶんのまとめ（全イベント横断） -->
-      <section class="card">
-        <div class="section-header">
-          <h2>🙋 じぶんのまとめ</h2>
-          <select id="meSelect" class="me-select" onchange="setMe(this.value)"></select>
+      <!-- ページ: 履歴 -->
+      <div class="page" id="page-history">
+       <div class="columns">
+        <div class="col">
+
+        <!-- イベントの羅列 -->
+        <section class="card">
+          <h2>📅 イベント履歴</h2>
+          <p class="hint">タップするとそのイベントの一覧に飛ぶよ</p>
+          <div id="eventListView"></div>
+        </section>
+
         </div>
-        <p class="hint">自分の名前を選ぶと、自分が参加した飲み会だけ「飲み会名・日付・自分が使った金額」で見れるよ。自分がいない飲み会は出てこない</p>
-        <div id="myEvents"></div>
-        <div id="myTotal" class="expense-total"></div>
-      </section>
+        <div class="col">
 
-      <!-- 記録の検索（全イベント横断） -->
-      <section class="card">
-        <div class="section-header">
-          <h2>📖 記録の検索</h2>
-          <button class="btn-secondary btn-sm" onclick="exportHistoryCSV()">📥 CSV</button>
-        </div>
-        <div class="form-row filter-row">
-          <div class="form-group">
-            <label for="histKeyword">キーワード</label>
-            <input type="text" id="histKeyword" placeholder="内容・イベント名" oninput="renderHistory()">
+        <!-- 記録の検索（全イベント横断） -->
+        <section class="card">
+          <div class="section-header">
+            <h2>📖 記録の検索</h2>
+            <button class="btn-secondary btn-sm" onclick="exportHistoryCSV()">📥 CSV</button>
           </div>
-          <div class="form-group">
-            <label for="histMember">メンバー</label>
-            <select id="histMember" onchange="renderHistory()"></select>
+          <div class="form-row filter-row">
+            <div class="form-group">
+              <label for="histKeyword">キーワード</label>
+              <input type="text" id="histKeyword" placeholder="内容・イベント名" oninput="renderHistory()">
+            </div>
+            <div class="form-group">
+              <label for="histMember">メンバー</label>
+              <select id="histMember" onchange="renderHistory()"></select>
+            </div>
+            <div class="form-group">
+              <label for="histFrom">いつから</label>
+              <input type="date" id="histFrom" onchange="renderHistory()">
+            </div>
+            <div class="form-group">
+              <label for="histTo">いつまで</label>
+              <input type="date" id="histTo" onchange="renderHistory()">
+            </div>
           </div>
-          <div class="form-group">
-            <label for="histFrom">いつから</label>
-            <input type="date" id="histFrom" onchange="renderHistory()">
-          </div>
-          <div class="form-group">
-            <label for="histTo">いつまで</label>
-            <input type="date" id="histTo" onchange="renderHistory()">
-          </div>
-        </div>
-        <p class="hint">全イベントの記録から「いつ・誰が・何に・いくら」を横断検索できるよ</p>
-        <div id="historyList"></div>
-        <div id="historyTotal" class="expense-total"></div>
-      </section>
+          <div id="historyList"></div>
+          <div id="historyTotal" class="expense-total"></div>
+        </section>
 
-     </div>
+        </div>
+       </div>
+      </div>
 
     </div>
 

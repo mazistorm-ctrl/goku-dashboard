@@ -65,6 +65,7 @@ function newEvent() {
   store.events.push(ev);
   store.currentEventId = ev.id;
   saveStore();
+  switchPage('input');
   renderAll();
 }
 
@@ -311,6 +312,7 @@ function editExpense(id) {
     };
   });
   setSplitMode(exp.mode);
+  switchPage('input');
   document.getElementById('expTitle').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -478,7 +480,7 @@ function renderAll() {
   renderParticipants();
   renderExpenses();
   renderSettlement();
-  renderMySummary();
+  renderEventList();
   renderHistoryMemberSelect();
   renderHistory();
 }
@@ -706,68 +708,46 @@ function renderSettlement() {
   }
 }
 
-// ===== じぶんのまとめ（全イベント横断） =====
-// 「自分が誰か」はこの端末だけの設定（共有URLには乗らない）
-function setMe(name) {
-  store.myName = name || null;
-  saveStore();
-  renderMySummary();
+// ===== ページタブ =====
+function switchPage(p) {
+  document.querySelectorAll('.page').forEach(el =>
+    el.classList.toggle('active', el.id === 'page-' + p));
+  document.querySelectorAll('.page-tab').forEach(el =>
+    el.classList.toggle('active', el.dataset.page === p));
+  window.scrollTo({ top: 0 });
 }
 
-function allMemberNames() {
-  return [...new Set(store.events.flatMap(ev => ev.members.map(m => m.name)))];
+// ===== イベント履歴（全イベントの羅列） =====
+function openEvent(id) {
+  switchEvent(id);
+  switchPage('list');
 }
 
-function renderMySummary() {
-  const sel = document.getElementById('meSelect');
-  const names = allMemberNames();
-  sel.innerHTML = '<option value="">自分は誰？</option>' +
-    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-  if (store.myName && names.includes(store.myName)) sel.value = store.myName;
-
-  const box = document.getElementById('myEvents');
-  const totalEl = document.getElementById('myTotal');
-  if (!store.myName || !names.includes(store.myName)) {
-    box.innerHTML = '<p class="hint">↑で自分の名前を選んでね</p>';
-    totalEl.textContent = '';
+function renderEventList() {
+  const box = document.getElementById('eventListView');
+  if (store.events.length === 0) {
+    box.innerHTML = '<p class="hint">まだイベントがないよ</p>';
     return;
   }
-
-  // 自分がお金の面で関わっている（負担がある or 立て替えた）イベントだけ
-  const rows = [];
-  store.events.forEach(ev => {
-    const me = ev.members.find(m => m.name === store.myName);
-    if (!me) return;
-    const mine = ev.expenses.filter(x =>
-      x.payerId === me.id || x.shares.some(s => s.memberId === me.id));
-    if (mine.length === 0) return;
-    const owed = mine.reduce((s, x) =>
-      s + (x.shares.find(sh => sh.memberId === me.id)?.amount || 0), 0);
-    const paid = mine.filter(x => x.payerId === me.id).reduce((s, x) => s + x.amount, 0);
-    const dates = mine.map(x => x.date).sort();
-    rows.push({ ev, owed, paid, from: dates[0], to: dates[dates.length - 1] });
-  });
-  rows.sort((a, b) => b.to.localeCompare(a.to));
-
-  if (rows.length === 0) {
-    box.innerHTML = '<p class="hint">まだ参加してる飲み会の記録がないよ</p>';
-    totalEl.textContent = '';
-    return;
-  }
+  const rows = store.events.map(ev => {
+    const dates = ev.expenses.map(x => x.date).sort();
+    return {
+      ev,
+      total: ev.expenses.reduce((s, x) => s + x.amount, 0),
+      from: dates[0] || null,
+      to: dates[dates.length - 1] || null
+    };
+  }).sort((a, b) => (b.to || '').localeCompare(a.to || ''));
 
   box.innerHTML = rows.map(r => `
-    <div class="expense-item my-event" onclick="switchEvent('${r.ev.id}')" title="タップでこの飲み会を開く">
+    <div class="expense-item my-event ${r.ev.id === store.currentEventId ? 'current' : ''}" onclick="openEvent('${r.ev.id}')">
       <div class="expense-main">
         <div class="expense-title">${esc(r.ev.name)}</div>
-        <div class="expense-sub">${fmtDate(r.from)}${r.from !== r.to ? '〜' + fmtDate(r.to).slice(5) : ''}｜立替 ${yen(r.paid)}</div>
+        <div class="expense-sub">${r.from ? fmtDate(r.from) + (r.from !== r.to ? '〜' + fmtDate(r.to).slice(5) : '') : '記録なし'}｜${r.ev.members.length}人・${r.ev.expenses.length}件</div>
       </div>
-      <div class="expense-amount">${yen(r.owed)}<div class="mine-share">自分の使用額</div></div>
+      <div class="expense-amount">${yen(r.total)}</div>
     </div>
   `).join('');
-
-  const owedTotal = rows.reduce((s, r) => s + r.owed, 0);
-  totalEl.textContent =
-    `${store.myName}が参加した飲み会 ${rows.length}件／使用額合計 ${yen(owedTotal)}`;
 }
 
 // ===== 記録の検索（全イベント横断） =====
