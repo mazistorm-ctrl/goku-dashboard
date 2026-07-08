@@ -383,6 +383,20 @@ select:focus {
   gap: 8px;
 }
 
+.me-picker {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.me-picker label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
 /* 割り方タブ */
 .split-tabs {
   display: flex;
@@ -743,11 +757,8 @@ select:focus {
   }
 
   #eventCard .event-row {
-    flex: 0 1 auto;
-  }
-
-  #eventCard #newEventRow {
     flex: 1 1 auto;
+    flex-wrap: nowrap;
   }
 
   .columns {

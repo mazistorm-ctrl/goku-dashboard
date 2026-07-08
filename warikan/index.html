@@ -70,7 +70,11 @@
                    onkeydown="if(event.key==='Enter')addMember()">
             <button class="btn-primary btn-sm" onclick="addMember()">追加</button>
           </div>
-          <p class="hint">丸をタップで色変更、名前をタップで「自分」としてマークできるよ</p>
+          <div class="me-picker" id="mePicker" style="display:none">
+            <label for="meSelect">じぶん（この端末の持ち主）</label>
+            <select id="meSelect" onchange="setMeFromSelect(this.value)"></select>
+          </div>
+          <p class="hint">じぶんを選ぶと、履歴タブの「じぶんのまとめ」に自分の使用額がまとまるよ。丸をタップで色変更</p>
         </section>
 
         </div>
@@ -164,27 +168,10 @@
        <div class="columns">
         <div class="col">
 
-        <!-- イベントの羅列 -->
-        <section class="card">
-          <h2>イベント履歴</h2>
-          <p class="hint">タップするとそのイベントの内訳に飛ぶよ</p>
-          <div id="eventListView"></div>
-        </section>
-
-        <!-- じぶんのまとめ（自分マークベース） -->
-        <section class="card">
-          <h2>じぶんのまとめ</h2>
-          <div id="myEvents"></div>
-          <div id="myTotal" class="expense-total"></div>
-        </section>
-
-        </div>
-        <div class="col">
-
-        <!-- 記録の検索（全イベント横断） -->
+        <!-- イベント履歴（検索付き） -->
         <section class="card">
           <div class="section-header">
-            <h2>記録の検索</h2>
+            <h2>イベント履歴</h2>
             <button class="btn-secondary btn-sm" onclick="exportHistoryCSV()">CSV書き出し</button>
           </div>
           <div class="form-row filter-row">
@@ -205,8 +192,19 @@
               <input type="date" id="histTo" onchange="renderHistory()">
             </div>
           </div>
+          <p class="hint" id="historyHint">タップするとそのイベントの内訳に飛ぶよ。絞り込むと日付ごとの検索結果になるよ</p>
           <div id="historyList"></div>
           <div id="historyTotal" class="expense-total"></div>
+        </section>
+
+        </div>
+        <div class="col">
+
+        <!-- じぶんのまとめ（自分マークベース） -->
+        <section class="card">
+          <h2>じぶんのまとめ</h2>
+          <div id="myEvents"></div>
+          <div id="myTotal" class="expense-total"></div>
         </section>
 
         </div>

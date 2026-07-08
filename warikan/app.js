@@ -189,7 +189,22 @@ function toggleMe(id) {
     delete store.meMap[ev.id];
   } else {
     store.meMap[ev.id] = id;
-    toast('自分としてマークしたよ。履歴タブに自分の使用額が集計される');
+    toast('じぶんに設定したよ。履歴タブに自分の使用額が集計される');
+  }
+  saveStore();
+  renderMembers();
+  renderMySummary();
+}
+
+// じぶんセレクター（名前タップと同じことを明示的なUIでやる）
+function setMeFromSelect(id) {
+  const ev = currentEvent();
+  if (!ev) return;
+  if (id) {
+    store.meMap[ev.id] = id;
+    toast('じぶんに設定したよ。履歴タブに自分の使用額が集計される');
+  } else {
+    delete store.meMap[ev.id];
   }
   saveStore();
   renderMembers();
@@ -686,7 +701,6 @@ function renderAll() {
   renderParticipants();
   renderExpenses();
   renderSettlement();
-  renderEventList();
   renderMySummary();
   renderHistoryMemberSelect();
   renderHistory();
@@ -709,19 +723,28 @@ function renderMembers() {
   const ev = currentEvent();
   if (!ev) return;
   const box = document.getElementById('memberChips');
+  const picker = document.getElementById('mePicker');
   if (ev.members.length === 0) {
     box.innerHTML = '<p class="hint">まずメンバーを追加しよう</p>';
+    picker.style.display = 'none';
     return;
   }
   const meId = store.meMap[ev.id];
   box.innerHTML = ev.members.map(m => `
     <span class="chip ${m.id === meId ? 'me' : ''}">
       ${avatar(m, `onclick="cycleColor('${m.id}')" title="タップで色変更"`)}
-      <button class="chip-name" onclick="toggleMe('${m.id}')" title="タップで自分としてマーク">${esc(m.name)}</button>
+      <button class="chip-name" onclick="toggleMe('${m.id}')" title="タップでじぶんに設定">${esc(m.name)}</button>
       ${m.id === meId ? '<span class="me-badge">自分</span>' : ''}
       <button class="chip-del" onclick="removeMember('${m.id}')">×</button>
     </span>
   `).join('');
+
+  // じぶんセレクター
+  picker.style.display = '';
+  const sel = document.getElementById('meSelect');
+  sel.innerHTML = '<option value="">未設定（選んでね）</option>' +
+    ev.members.map(m =>
+      `<option value="${m.id}" ${m.id === meId ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
 }
 
 function renderPayerSelect() {
@@ -930,40 +953,10 @@ function switchPage(p) {
   window.scrollTo({ top: 0 });
 }
 
-// ===== イベント履歴（全イベントの羅列） =====
+// ===== イベント履歴 =====
 function openEvent(id) {
   switchEvent(id);
   switchPage('list');
-}
-
-function renderEventList() {
-  const box = document.getElementById('eventListView');
-  if (store.events.length === 0) {
-    box.innerHTML = '<p class="hint">まだイベントがないよ</p>';
-    return;
-  }
-  const rows = store.events.map(ev => {
-    const dates = ev.expenses.map(x => x.date).sort();
-    return {
-      ev,
-      total: ev.expenses.reduce((s, x) => s + x.amount, 0),
-      from: dates[0] || null,
-      to: dates[dates.length - 1] || null
-    };
-  }).sort((a, b) => (b.to || '').localeCompare(a.to || ''));
-
-  box.innerHTML = rows.map(r => `
-    <div class="expense-item my-event ${r.ev.id === store.currentEventId ? 'current' : ''}">
-      <div class="expense-main" onclick="openEvent('${r.ev.id}')">
-        <div class="expense-title">${esc(r.ev.name)}</div>
-        <div class="expense-sub">${r.from ? fmtDate(r.from) + (r.from !== r.to ? '〜' + fmtDate(r.to).slice(5) : '') : '記録なし'}｜${r.ev.members.length}人・${r.ev.expenses.length}件</div>
-      </div>
-      <div class="expense-amount" onclick="openEvent('${r.ev.id}')">${yen(r.total)}</div>
-      <div class="expense-btns">
-        <button class="btn-delete btn-sm" onclick="deleteEventById('${r.ev.id}')">削除</button>
-      </div>
-    </div>
-  `).join('');
 }
 
 // ===== じぶんのまとめ（自分マークしたイベントの集計） =====
@@ -1081,12 +1074,52 @@ function openEventOnDate(evId, date) {
 
 function renderHistory() {
   const box = document.getElementById('historyList');
-  const rows = filteredRecords();
+  const totalEl = document.getElementById('historyTotal');
+  const kw = document.getElementById('histKeyword').value.trim();
   const member = document.getElementById('histMember').value;
+  const from = document.getElementById('histFrom').value;
+  const to = document.getElementById('histTo').value;
+  const filtering = !!(kw || member || from || to);
 
+  // 絞り込みなし: イベント単位の一覧（削除もここでできる）
+  if (!filtering) {
+    if (store.events.length === 0) {
+      box.innerHTML = '<p class="hint">まだイベントがないよ</p>';
+      totalEl.textContent = '';
+      return;
+    }
+    const rows = store.events.map(ev => {
+      const dates = ev.expenses.map(x => x.date).sort();
+      return {
+        ev,
+        total: ev.expenses.reduce((s, x) => s + x.amount, 0),
+        from: dates[0] || null,
+        to: dates[dates.length - 1] || null
+      };
+    }).sort((a, b) => (b.to || '').localeCompare(a.to || ''));
+
+    box.innerHTML = rows.map(r => `
+      <div class="expense-item my-event ${r.ev.id === store.currentEventId ? 'current' : ''}">
+        <div class="expense-main" onclick="openEvent('${r.ev.id}')">
+          <div class="expense-title">${esc(r.ev.name)}</div>
+          <div class="expense-sub">${r.from ? fmtDate(r.from) + (r.from !== r.to ? '〜' + fmtDate(r.to).slice(5) : '') : '記録なし'}｜${r.ev.members.length}人・${r.ev.expenses.length}件</div>
+        </div>
+        <div class="expense-amount" onclick="openEvent('${r.ev.id}')">${yen(r.total)}</div>
+        <div class="expense-btns">
+          <button class="btn-delete btn-sm" onclick="deleteEventById('${r.ev.id}')">削除</button>
+        </div>
+      </div>
+    `).join('');
+    const grand = rows.reduce((s, r) => s + r.total, 0);
+    totalEl.textContent = `イベント ${rows.length}件／合計 ${yen(grand)}`;
+    return;
+  }
+
+  // 絞り込みあり: イベント×日付の検索結果
+  const rows = filteredRecords();
   if (rows.length === 0) {
     box.innerHTML = '<p class="hint">該当する記録がないよ</p>';
-    document.getElementById('historyTotal').textContent = '';
+    totalEl.textContent = '';
     return;
   }
 
@@ -1104,7 +1137,7 @@ function renderHistory() {
   const total = member
     ? rows.reduce((s, r) => s + memberShareIn(r.ev, member, r.x), 0)
     : rows.reduce((s, r) => s + r.x.amount, 0);
-  document.getElementById('historyTotal').textContent = member
+  totalEl.textContent = member
     ? `${rows.length}件／${member}の使用額合計 ${yen(total)}`
     : `${rows.length}件／合計 ${yen(total)}`;
 }
