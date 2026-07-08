@@ -2,6 +2,71 @@
 const STORAGE_KEY = 'warikan-data';
 const COLORS = ['#E8604C', '#3B82C4', '#2E9E6B', '#C4863B', '#7A5FB8', '#D6558E', '#4A9FA8', '#5B7A3C'];
 
+// ===== クラウド同期（Supabase） =====
+// anon/publishable keyはRLSポリシーとセットでブラウザに公開して良い前提の鍵
+const SUPABASE_URL = 'https://szepvwlszjxbdnsrdvgo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1VBKU2Yqb5Z0id29M99XyQ_SwO_wb_n';
+const sb = (typeof supabase !== 'undefined')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
+let cloudChannel = null;
+
+// イベントをクラウドへ反映（失敗してもローカルには保存済みなので黙って諦める）
+async function syncEventToCloud(ev) {
+  if (!sb || !ev) return;
+  try {
+    await sb.from('waripita_events').upsert({ id: ev.id, data: ev });
+  } catch (e) { /* オフライン等。次の操作時にまた試す */ }
+}
+
+async function deleteEventFromCloud(id) {
+  if (!sb) return;
+  try {
+    await sb.from('waripita_events').delete().eq('id', id);
+  } catch (e) { /* オフライン等 */ }
+}
+
+async function fetchEventFromCloud(id) {
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb.from('waripita_events').select('data').eq('id', id).single();
+    if (error || !data) return null;
+    return data.data;
+  } catch (e) {
+    return null;
+  }
+}
+
+// クラウド側の更新をこのタブへ反映（自分がsyncEventToCloudで送った分も
+// 折り返し届くが、内容は同じなので再描画されるだけで実害はない）
+function applyRemoteEvent(remoteEv) {
+  migrateEvent(remoteEv);
+  const i = store.events.findIndex(e => e.id === remoteEv.id);
+  if (i >= 0) store.events[i] = remoteEv; else store.events.push(remoteEv);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  if (store.currentEventId === remoteEv.id) renderAll();
+}
+
+// 今開いているイベントのリアルタイム購読を張り直す
+function subscribeToCurrentEvent() {
+  if (!sb) return;
+  if (cloudChannel) {
+    sb.removeChannel(cloudChannel);
+    cloudChannel = null;
+  }
+  const ev = currentEvent();
+  if (!ev) return;
+  cloudChannel = sb.channel('waripita_events_' + ev.id)
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'waripita_events', filter: `id=eq.${ev.id}` },
+      payload => {
+        if (payload.eventType === 'DELETE') return;
+        if (payload.new && payload.new.data) applyRemoteEvent(payload.new.data);
+      })
+    .subscribe();
+}
+
 function loadStore() {
   const data = localStorage.getItem(STORAGE_KEY);
   const store = data ? JSON.parse(data) : { events: [], currentEventId: null };
@@ -32,6 +97,7 @@ function today() {
 
 function saveStore() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  syncEventToCloud(currentEvent());
 }
 
 let store = loadStore();
@@ -125,7 +191,9 @@ function deleteEventById(id) {
     store.currentEventId = store.events.length ? store.events[0].id : null;
   }
   saveStore();
+  deleteEventFromCloud(id);
   renderAll();
+  subscribeToCurrentEvent();
   toast('イベントを削除したよ');
 }
 
@@ -140,6 +208,7 @@ function switchEvent(id) {
   viewMemberId = null;
   cancelNewEvent();
   renderAll();
+  subscribeToCurrentEvent();
 }
 
 // ===== メンバー =====
@@ -636,17 +705,51 @@ function decodeEvent(str) {
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 
+// 共有URLはイベントIDだけの短いリンク。クラウドに置いてあるので
+// 開いた人は誰でも今の最新状態を取得できる（リアルタイム更新も入る）
 function copyShareUrl() {
   const ev = currentEvent();
   if (!ev) return;
-  const url = location.origin + location.pathname + '#d=' + encodeEvent(ev);
+  syncEventToCloud(ev);
+  const url = location.origin + location.pathname + '#e=' + ev.id;
   copyText(url, '共有URLをコピーしたよ！LINEで送ろう');
 }
 
-function importFromHash() {
-  if (!location.hash.startsWith('#d=')) return;
+async function importFromHash() {
+  const hash = location.hash;
+
+  if (hash.startsWith('#e=')) {
+    const id = hash.slice(3);
+    history.replaceState(null, '', location.pathname);
+    const remote = await fetchEventFromCloud(id);
+    if (!remote) {
+      // クラウドから取れない（オフライン等）→ローカルに同じイベントがあればそれを開く
+      if (store.events.some(e => e.id === id)) {
+        store.currentEventId = id;
+        saveStore();
+      } else {
+        alert('共有データを読み込めなかったよ。ネット接続を確認してね');
+      }
+      renderAll();
+      subscribeToCurrentEvent();
+      return;
+    }
+    migrateEvent(remote);
+    const exists = store.events.findIndex(e => e.id === remote.id);
+    if (exists >= 0) store.events[exists] = remote;
+    else store.events.push(remote);
+    store.currentEventId = remote.id;
+    saveStore();
+    toast(`「${remote.name}」を読み込んだよ！`);
+    renderAll();
+    subscribeToCurrentEvent();
+    return;
+  }
+
+  // 旧形式（URLにデータをまるごと埋め込む方式）の共有リンクも引き続き開ける
+  if (!hash.startsWith('#d=')) return;
   try {
-    const ev = decodeEvent(location.hash.slice(3));
+    const ev = decodeEvent(hash.slice(3));
     if (!ev.id || !Array.isArray(ev.members)) throw new Error('bad data');
     migrateEvent(ev);
     const exists = store.events.findIndex(e => e.id === ev.id);
@@ -1294,6 +1397,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('expDate').value = today();
   renderAll();
+  subscribeToCurrentEvent();
 
   // PWA: ホーム画面に追加してアプリとして使えるようにする
   if ('serviceWorker' in navigator &&
