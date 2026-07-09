@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ワリピタ〜友達間割り勘〜</title>
+  <meta name="theme-color" content="#ff6a3c">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ワリピタ">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <h1 class="logo">ワリ<span class="logo-accent">ピタ</span><span class="logo-mark">！</span></h1>
+      <p>友達間の割り勘精算 — ログイン不要</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- イベント選択 -->
+    <section class="card" id="eventCard">
+      <div class="section-header">
+        <h2>イベント名</h2>
+      </div>
+      <div class="event-row">
+        <select id="eventSelect" onchange="switchEvent(this.value)"></select>
+        <button class="btn-secondary btn-sm" onclick="renameEvent()">名前変更</button>
+        <button class="btn-secondary btn-sm" onclick="deleteEvent()">削除</button>
+        <button class="btn-primary btn-sm" onclick="showNewEventRow()">＋新規</button>
+      </div>
+      <div class="event-row" id="newEventRow" style="display:none">
+        <input type="text" id="newEventName" placeholder="イベント名（例：3/15 飲み会）" maxlength="30"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();confirmNewEvent();}">
+        <button class="btn-primary btn-sm" onclick="confirmNewEvent()">作成</button>
+        <button class="btn-secondary btn-sm" onclick="cancelNewEvent()">キャンセル</button>
+      </div>
+    </section>
+
+    <div id="appBody">
+
+      <!-- ページタブ -->
+      <nav class="page-tabs">
+        <button class="page-tab active" data-page="input" onclick="switchPage('input')">記録・精算</button>
+        <button class="page-tab" data-page="list" onclick="switchPage('list')">イベント内訳</button>
+        <button class="page-tab" data-page="history" onclick="switchPage('history')">履歴</button>
+      </nav>
+
+      <!-- ページ: 記録・精算 -->
+      <div class="page active" id="page-input">
+       <div id="stepGuide" class="step-guide"></div>
+       <div class="input-grid">
+
+        <!-- メンバー -->
+        <section class="card area-members">
+          <h2>メンバー</h2>
+          <div id="memberChips" class="member-chips"></div>
+          <div class="member-add-row">
+            <input type="text" id="memberName" placeholder="名前（例：たけし）" maxlength="12"
+                   onkeydown="if(event.key==='Enter')addMember()">
+            <button class="btn-primary btn-sm" onclick="addMember()">追加</button>
+          </div>
+          <div class="me-picker" id="mePicker" style="display:none">
+            <label for="meSelect">じぶん（この端末の持ち主）</label>
+            <select id="meSelect" onchange="setMeFromSelect(this.value)"></select>
+          </div>
+          <p class="hint">じぶんを選ぶと履歴タブに自分の使用額がまとまるよ</p>
+        </section>
+
+        <!-- 支払い入力 -->
+        <section class="card area-form">
+          <h2 id="expenseFormTitle">支払いを記録</h2>
+
+          <div id="expenseFormGate" class="gate-message" style="display:none">
+            <p>あと<span id="gateNeedCount">2</span>人、参加者を追加すると支払いを記録できるようになるよ</p>
+            <p class="hint">← 左の「メンバー」から名前を追加してね</p>
+          </div>
+
+          <div id="expenseFormBody">
+          <div class="form-row">
+            <div class="form-group form-group-full">
+              <label for="expTitle">何に使った？</label>
+              <input type="text" id="expTitle" placeholder="例：1軒目の居酒屋">
+            </div>
+            <div class="form-group">
+              <label for="expAmount">金額（円）</label>
+              <input type="number" id="expAmount" placeholder="例：12800" inputmode="numeric" oninput="updateSplitStatus();updatePayerStatus()">
+            </div>
+            <div class="form-group">
+              <div class="payer-label-row">
+                <label for="expPayer">払った人</label>
+                <button type="button" class="link-btn" id="payerModeToggle" onclick="togglePayerMode()">複数人で払った</button>
+              </div>
+              <select id="expPayer"></select>
+            </div>
+          </div>
+
+          <div id="payerList" class="participant-list" style="display:none"></div>
+          <p id="payerStatus" class="hint" style="display:none"></p>
+
+          <button type="button" class="settings-bar" id="advToggle" onclick="toggleAdv()">
+            <span class="settings-bar-icon">⚙</span>
+            <span class="settings-bar-text" id="advSummary"></span>
+            <span class="settings-bar-cta" id="advCta">変更 ▾</span>
+          </button>
+          <div id="expAdvanced" style="display:none">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="expDate">日付</label>
+                <input type="date" id="expDate" onchange="updateAdvSummary()">
+              </div>
+            </div>
+
+            <label class="split-label">割り方</label>
+            <div class="split-tabs">
+              <button id="tab-even"  class="split-tab active" onclick="setSplitMode('even')">均等</button>
+              <button id="tab-ratio" class="split-tab" onclick="setSplitMode('ratio')">傾斜</button>
+              <button id="tab-exact" class="split-tab" onclick="setSplitMode('exact')">金額指定</button>
+            </div>
+
+            <div id="participantList" class="participant-list"></div>
+            <p id="splitStatus" class="hint"></p>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" id="expSaveBtn" onclick="saveExpense()">記録する</button>
+            <button class="btn-secondary" id="expCancelBtn" onclick="cancelEdit()" style="display:none">キャンセル</button>
+          </div>
+          </div>
+        </section>
+
+        <!-- 精算（記録するとすぐここに反映される） -->
+        <section class="card area-settle">
+          <h2>精算</h2>
+          <div id="settlementList"></div>
+
+          <button type="button" class="disclosure" id="settleDetailToggle" onclick="toggleSettleDetail()">みんなの収支・端数・返済の記録 ▾</button>
+          <div id="settleDetail" style="display:none">
+            <div class="round-row">
+              <label for="roundUnit">端数</label>
+              <select id="roundUnit" onchange="setRoundUnit(this.value)">
+                <option value="1">1円単位</option>
+                <option value="10">10円単位</option>
+                <option value="100">100円単位</option>
+              </select>
+            </div>
+            <div id="balanceSummary"></div>
+
+            <label class="split-label">返済の記録（実際にお金を渡したら記録。精算リストの「渡した」でも記録される）</label>
+            <div class="repay-form">
+              <select id="repayFrom"></select>
+              <span class="settle-arrow">→</span>
+              <select id="repayTo"></select>
+              <input type="number" id="repayAmount" inputmode="numeric" placeholder="円">
+              <button class="btn-primary btn-sm" onclick="recordRepayment()">渡した</button>
+            </div>
+            <div id="repayList"></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" onclick="copySettlementText()">LINE用にコピー</button>
+            <button class="btn-secondary" onclick="copyShareUrl()">共有URLをコピー</button>
+          </div>
+        </section>
+
+       </div>
+      </div>
+
+      <!-- ページ: 一覧 -->
+      <div class="page page-narrow" id="page-list">
+        <section class="card">
+          <h2>イベント内訳</h2>
+          <div id="memberTabs" class="view-tabs"></div>
+          <div id="dateTabs" class="view-tabs"></div>
+          <div id="expenseList"></div>
+          <div id="expenseTotal" class="expense-total"></div>
+        </section>
+      </div>
+
+      <!-- ページ: 履歴 -->
+      <div class="page" id="page-history">
+       <div class="columns">
+        <div class="col">
+
+        <!-- イベント履歴（検索付き） -->
+        <section class="card">
+          <div class="section-header">
+            <h2>イベント履歴</h2>
+            <button class="btn-secondary btn-sm" onclick="exportHistoryCSV()">CSV書き出し</button>
+          </div>
+          <div class="form-row filter-row">
+            <div class="form-group">
+              <label for="histKeyword">キーワード</label>
+              <input type="text" id="histKeyword" placeholder="内容・イベント名" oninput="renderHistory()">
+            </div>
+            <div class="form-group">
+              <label for="histMember">メンバー</label>
+              <select id="histMember" onchange="renderHistory()"></select>
+            </div>
+            <div class="form-group">
+              <label for="histFrom">いつから</label>
+              <input type="date" id="histFrom" onchange="renderHistory()">
+            </div>
+            <div class="form-group">
+              <label for="histTo">いつまで</label>
+              <input type="date" id="histTo" onchange="renderHistory()">
+            </div>
+          </div>
+          <p class="hint" id="historyHint">タップするとそのイベントの内訳に飛ぶよ。絞り込むと日付ごとの検索結果になるよ</p>
+          <div id="historyList"></div>
+          <div id="historyTotal" class="expense-total"></div>
+        </section>
+
+        </div>
+        <div class="col">
+
+        <!-- じぶんのまとめ（自分マークベース） -->
+        <section class="card">
+          <div class="section-header">
+            <h2>じぶんのまとめ</h2>
+            <select id="mySummarySelect" class="me-select" onchange="setMeFromSelect(this.value)"></select>
+          </div>
+          <p class="hint">自分の名前を選ぶと、同じ名前で参加したイベントが全部まとまるよ</p>
+          <div id="myEvents"></div>
+          <div id="myTotal" class="expense-total"></div>
+        </section>
+
+        </div>
+       </div>
+
+       <p class="danger-zone">
+         <button class="btn-delete btn-sm" onclick="resetAll()">この端末のワリピタのデータをすべて削除</button>
+       </p>
+      </div>
+
+    </div>
+
+    <div id="emptyState" class="card empty-state" style="display:none">
+      <p>まだイベントがないよ。<br>「＋新規」から飲み会や旅行を作ろう！</p>
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
