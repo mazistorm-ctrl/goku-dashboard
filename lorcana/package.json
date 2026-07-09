@@ -1,0 +1,14 @@
+{
+  "name": "lorcana-price-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ディズニー・ロルカナ 店舗別 買取/販売価格トラッカー",
+  "scripts": {
+    "scrape": "node scraper/scrape.mjs",
+    "serve": "npx -y serve ."
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  }
+}

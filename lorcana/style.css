@@ -1,0 +1,266 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --ink: #1a1d29;
+  --ink-light: #2b3048;
+  --accent: #c9a227;
+  --bg: #f4f4f7;
+  --card-bg: #ffffff;
+  --border: #e3e4ea;
+  --text: #24262e;
+  --muted: #8a8d99;
+  --best-bg: #fff7e0;
+}
+
+body {
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+header {
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-light) 100%);
+  color: #fff;
+  padding: 28px 16px;
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+header p {
+  color: #c8cad6;
+  font-size: 0.9rem;
+}
+
+header .updated {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+main {
+  max-width: 1100px;
+  margin: 24px auto 60px;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.banner {
+  background: #fff3cd;
+  border: 1px solid #f0dc9a;
+  color: #6b5410;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+}
+
+.banner code {
+  background: #f6ead0;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(20, 22, 40, 0.05);
+}
+
+.card h2 {
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group.grow {
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+input[type="text"],
+select {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  background: #fff;
+  color: var(--text);
+}
+
+input[type="text"]:focus,
+select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+.count {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 760px;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  background: #fafafc;
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+th small {
+  font-weight: normal;
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+td.best {
+  background: var(--best-bg);
+  font-weight: 700;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 36px 0;
+}
+
+.card-name {
+  font-weight: 600;
+}
+
+.card-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.rarity {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.rarity-enchanted {
+  background: linear-gradient(90deg, #ffe9f3, #e8f0ff);
+  color: #7a3f8f;
+  border: 1px solid #e5c9ef;
+}
+
+.rarity-legendary {
+  background: #fff3d6;
+  color: #8a6410;
+  border: 1px solid #efd9a0;
+}
+
+.rarity-other,
+.rarity-none {
+  background: #eef0f4;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.legend {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.shop-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.shop-list a {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.88rem;
+  background: #fafafc;
+}
+
+.shop-list a:hover {
+  border-color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

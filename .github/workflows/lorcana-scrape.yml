@@ -1,0 +1,40 @@
+name: Lorcana 価格スクレイピング
+
+on:
+  schedule:
+    # 毎日 6:00 JST（21:00 UTC）に実行
+    - cron: "0 21 * * *"
+  workflow_dispatch: # 手動実行も可能
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 依存パッケージをインストール
+        working-directory: lorcana
+        run: npm install
+
+      - name: スクレイピング実行
+        working-directory: lorcana
+        run: node scraper/scrape.mjs
+
+      - name: 変更があればコミット
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lorcana/data/prices.json
+          if git diff --cached --quiet; then
+            echo "価格に変更なし"
+          else
+            git commit -m "chore: ロルカナ価格データを更新 ($(date -u +%Y-%m-%d))"
+            git push
+          fi
