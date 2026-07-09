@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lorcana Price Tracker｜ロルカナ店舗別買取・販売価格</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <h1>🃏 Lorcana Price Tracker</h1>
+      <p>ディズニー・ロルカナ 店舗別 買取／販売価格の比較</p>
+      <p class="updated" id="updatedAt"></p>
+    </div>
+  </header>
+
+  <main>
+    <div id="sampleBanner" class="banner" hidden>
+      ⚠️ 現在表示中なのは<strong>デモ用サンプルデータ</strong>です。<code>npm run scrape</code> を実行すると実データに置き換わります。
+    </div>
+
+    <!-- フィルタ -->
+    <section class="card controls">
+      <div class="form-group grow">
+        <label for="search">カード名で検索</label>
+        <input type="text" id="search" placeholder="例：エルサ / Elsa">
+      </div>
+      <div class="form-group">
+        <label for="setFilter">収録弾</label>
+        <select id="setFilter"><option value="">すべて</option></select>
+      </div>
+      <div class="form-group">
+        <label for="rarityFilter">レアリティ</label>
+        <select id="rarityFilter"><option value="">すべて</option></select>
+      </div>
+      <div class="form-group">
+        <label for="sortBy">並び替え</label>
+        <select id="sortBy">
+          <option value="buy-desc">最高買取価格が高い順</option>
+          <option value="buy-asc">最高買取価格が安い順</option>
+          <option value="spread-desc">買取/販売差が大きい順</option>
+          <option value="name">カード名順</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- 価格テーブル -->
+    <section class="card">
+      <div class="section-header">
+        <h2>💰 価格一覧</h2>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="priceTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <p class="legend">🏆 = その行で最も高い買取価格。金額は各店舗の公表価格を定期取得したもので、実際の買取額は状態・在庫状況により変動します。</p>
+    </section>
+
+    <!-- 取得元 -->
+    <section class="card">
+      <h2>🏬 データ取得元の店舗</h2>
+      <ul id="shopList" class="shop-list"></ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

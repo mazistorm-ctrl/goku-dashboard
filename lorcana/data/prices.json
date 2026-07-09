@@ -1,0 +1,207 @@
+{
+  "generatedAt": "2026-07-09T00:00:00.000Z",
+  "sampleData": true,
+  "note": "これはデモ用のサンプルデータです。scraper/scrape.mjs を実行すると実データに置き換わります。",
+  "shops": [
+    { "id": "mercard", "name": "秋葉原メルカード", "url": "https://akihabara-cardshop.com/lorcana-kaitori/" },
+    { "id": "clove", "name": "Clove Base", "url": "https://store.clove.jp/jp/buying/lorcana" },
+    { "id": "furu1", "name": "古本市場", "url": "https://www.furu1.net/kaitori/sell_toreca/lorcana" }
+  ],
+  "cards": [
+    {
+      "key": "tfc-207-elsa-spirit-of-winter-enchanted",
+      "name": "エルサ 〜雪の女王〜",
+      "nameEn": "Elsa - Spirit of Winter",
+      "set": "第1弾 ファーストチャプター",
+      "number": "207/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 78000, "sell": 99800 },
+        "clove": { "buy": 75000, "sell": 96000 },
+        "furu1": { "buy": 70000, "sell": null }
+      }
+    },
+    {
+      "key": "tfc-214-stitch-rock-star-enchanted",
+      "name": "スティッチ 〜ロックスター〜",
+      "nameEn": "Stitch - Rock Star",
+      "set": "第1弾 ファーストチャプター",
+      "number": "214/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 42000, "sell": 54800 },
+        "clove": { "buy": 45000, "sell": 56000 },
+        "furu1": { "buy": 38000, "sell": null }
+      }
+    },
+    {
+      "key": "tfc-211-mickey-mouse-wizards-apprentice-enchanted",
+      "name": "ミッキーマウス 〜魔法使いの弟子〜",
+      "nameEn": "Mickey Mouse - Wizard's Apprentice",
+      "set": "第1弾 ファーストチャプター",
+      "number": "211/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 35000, "sell": 45800 },
+        "clove": { "buy": 33000, "sell": 43000 },
+        "furu1": { "buy": 30000, "sell": null }
+      }
+    },
+    {
+      "key": "rotf-223-beast-tragic-hero-enchanted",
+      "name": "ビースト 〜悲劇のヒーロー〜",
+      "nameEn": "Beast - Tragic Hero",
+      "set": "第2弾 フラッドボーンの台頭",
+      "number": "223/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 18000, "sell": 24800 },
+        "clove": { "buy": 20000, "sell": 26000 },
+        "furu1": { "buy": 15000, "sell": null }
+      }
+    },
+    {
+      "key": "rotf-224-winnie-the-pooh-hunny-wizard-enchanted",
+      "name": "くまのプーさん 〜はちみつの魔法使い〜",
+      "nameEn": "Winnie the Pooh - Hunny Wizard",
+      "set": "第2弾 フラッドボーンの台頭",
+      "number": "224/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 22000, "sell": 29800 },
+        "clove": { "buy": 21000, "sell": 28000 },
+        "furu1": { "buy": 19000, "sell": null }
+      }
+    },
+    {
+      "key": "iti-216-jim-hawkins-space-traveler-enchanted",
+      "name": "ジム・ホーキンス 〜宇宙の旅人〜",
+      "nameEn": "Jim Hawkins - Space Traveler",
+      "set": "第3弾 インクランド探訪",
+      "number": "216/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 12000, "sell": 16800 },
+        "clove": { "buy": 13000, "sell": 17500 },
+        "furu1": { "buy": 10000, "sell": null }
+      }
+    },
+    {
+      "key": "iti-223-mulan-elite-archer-enchanted",
+      "name": "ムーラン 〜精鋭の射手〜",
+      "nameEn": "Mulan - Elite Archer",
+      "set": "第3弾 インクランド探訪",
+      "number": "223/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 15000, "sell": 19800 },
+        "clove": { "buy": 14000, "sell": 18500 },
+        "furu1": { "buy": 13000, "sell": null }
+      }
+    },
+    {
+      "key": "tfc-114-elsa-spirit-of-winter-legendary",
+      "name": "エルサ 〜雪の女王〜",
+      "nameEn": "Elsa - Spirit of Winter",
+      "set": "第1弾 ファーストチャプター",
+      "number": "58/204",
+      "rarity": "レジェンダリー",
+      "prices": {
+        "mercard": { "buy": 4500, "sell": 6800 },
+        "clove": { "buy": 5000, "sell": 7000 },
+        "furu1": { "buy": 4000, "sell": null }
+      }
+    },
+    {
+      "key": "tfc-88-mickey-mouse-brave-little-tailor-legendary",
+      "name": "ミッキーマウス 〜勇敢な小さな仕立て屋〜",
+      "nameEn": "Mickey Mouse - Brave Little Tailor",
+      "set": "第1弾 ファーストチャプター",
+      "number": "115/204",
+      "rarity": "レジェンダリー",
+      "prices": {
+        "mercard": { "buy": 3800, "sell": 5480 },
+        "clove": { "buy": 4200, "sell": 5800 },
+        "furu1": { "buy": 3500, "sell": null }
+      }
+    },
+    {
+      "key": "tfc-125-maleficent-monstrous-dragon-legendary",
+      "name": "マレフィセント 〜魔性のドラゴン〜",
+      "nameEn": "Maleficent - Monstrous Dragon",
+      "set": "第1弾 ファーストチャプター",
+      "number": "113/204",
+      "rarity": "レジェンダリー",
+      "prices": {
+        "mercard": { "buy": 2800, "sell": 3980 },
+        "clove": { "buy": 3000, "sell": 4200 },
+        "furu1": { "buy": 2500, "sell": null }
+      }
+    },
+    {
+      "key": "ur-222-sisu-empowered-sibling-enchanted",
+      "name": "シスー 〜力を得た末娘〜",
+      "nameEn": "Sisu - Empowered Sibling",
+      "set": "第4弾 アースラの帰還",
+      "number": "222/204",
+      "rarity": "エンチャンテッド",
+      "prices": {
+        "mercard": { "buy": 16000, "sell": 21800 },
+        "clove": { "buy": 17000, "sell": 22500 },
+        "furu1": { "buy": 14000, "sell": null }
+      }
+    },
+    {
+      "key": "ur-107-ursula-deceiver-of-all-legendary",
+      "name": "アースラ 〜万物を欺く者〜",
+      "nameEn": "Ursula - Deceiver of All",
+      "set": "第4弾 アースラの帰還",
+      "number": "107/204",
+      "rarity": "レジェンダリー",
+      "prices": {
+        "mercard": { "buy": 1800, "sell": 2680 },
+        "clove": { "buy": 2000, "sell": 2900 },
+        "furu1": { "buy": 1500, "sell": null }
+      }
+    },
+    {
+      "key": "tfc-104-hades-king-of-olympus-legendary",
+      "name": "ハデス 〜オリンポスの王〜",
+      "nameEn": "Hades - King of Olympus",
+      "set": "第1弾 ファーストチャプター",
+      "number": "6/204",
+      "rarity": "レジェンダリー",
+      "prices": {
+        "mercard": { "buy": 2200, "sell": 3280 },
+        "clove": { "buy": 2400, "sell": 3400 },
+        "furu1": { "buy": 2000, "sell": null }
+      }
+    },
+    {
+      "key": "iti-19-scrooge-mcduck-richest-duck-legendary",
+      "name": "スクルージ・マクダック 〜世界一の大富豪〜",
+      "nameEn": "Scrooge McDuck - Richest Duck in the World",
+      "set": "第3弾 インクランド探訪",
+      "number": "19/204",
+      "rarity": "レジェンダリー",
+      "prices": {
+        "mercard": { "buy": 1500, "sell": 2280 },
+        "clove": { "buy": 1600, "sell": 2400 },
+        "furu1": { "buy": 1200, "sell": null }
+      }
+    },
+    {
+      "key": "tfc-142-tinker-bell-giant-fairy-legendary",
+      "name": "ティンカー・ベル 〜巨大な妖精〜",
+      "nameEn": "Tinker Bell - Giant Fairy",
+      "set": "第1弾 ファーストチャプター",
+      "number": "160/204",
+      "rarity": "レジェンダリー",
+      "prices": {
+        "mercard": { "buy": 1200, "sell": 1980 },
+        "clove": { "buy": 1400, "sell": 2100 },
+        "furu1": { "buy": 1000, "sell": null }
+      }
+    }
+  ]
+}
