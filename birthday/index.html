@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎂 GOKU生誕祭 Ops Center</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <header>
+    <div class="header-inner">
+      <h1>🎂 GOKU生誕祭 Ops Center</h1>
+      <p>友達の"おめでとう"を最速・最高効率でお届けする自動化システム</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- KPIカード -->
+    <section class="kpi-row">
+      <div class="card kpi">
+        <span class="kpi-label">累計おめでとう受信数</span>
+        <span class="kpi-value" id="kpiCount">0</span>
+        <span class="kpi-sub">目標 <span id="kpiGoal">100</span>件</span>
+      </div>
+      <div class="card kpi">
+        <span class="kpi-label">OKR達成率</span>
+        <span class="kpi-value" id="kpiRate">0%</span>
+        <div class="progress"><div class="progress-bar" id="kpiBar"></div></div>
+      </div>
+      <div class="card kpi">
+        <span class="kpi-label">平均祝福処理速度</span>
+        <span class="kpi-value" id="kpiSpeed">-</span>
+        <span class="kpi-sub">秒／件（速いほど優秀）</span>
+      </div>
+    </section>
+
+    <!-- 祝福フォーム -->
+    <section class="card">
+      <h2>⚡ 最速祝福フォーム</h2>
+      <p class="hint">テンプレートをタップ→名前を入れて送信するだけ。平均0.3秒の意思決定で完了する設計です。</p>
+
+      <div class="templates" id="templates">
+        <button class="chip" type="button">誕生日おめでとう🎉</button>
+        <button class="chip" type="button">今年も一緒に飲もう🍻</button>
+        <button class="chip" type="button">GOKUの成長速度がすごい📈</button>
+        <button class="chip" type="button">いつもありがとう🙏</button>
+        <button class="chip" type="button">来年はもっと会おうね✨</button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">お名前</label>
+          <input type="text" id="name" placeholder="例：たなか">
+        </div>
+        <div class="form-group form-group-wide">
+          <label for="message">メッセージ</label>
+          <input type="text" id="message" placeholder="上のテンプレートをタップ、または自由入力">
+        </div>
+      </div>
+      <button class="btn-primary" id="submitBtn">🚀 祝福を送信する（効率化ボタン）</button>
+    </section>
+
+    <!-- 証明書 -->
+    <section class="card cert-card" id="certSection" hidden>
+      <h2>🏆 祝福証明書が発行されました</h2>
+      <canvas id="certCanvas" width="800" height="450"></canvas>
+      <button class="btn-secondary" id="downloadBtn">📥 画像を保存してストーリーでシェア</button>
+    </section>
+
+    <!-- グラフ -->
+    <section class="card">
+      <h2>📊 時間帯別おめでとう受信ペース</h2>
+      <canvas id="wishChart"></canvas>
+    </section>
+
+    <!-- ログ -->
+    <section class="card">
+      <div class="section-header">
+        <h2>📋 祝福ログ</h2>
+      </div>
+      <div class="table-wrap">
+        <table id="wishTable">
+          <thead>
+            <tr>
+              <th>時刻</th>
+              <th>お名前</th>
+              <th>メッセージ</th>
+              <th>処理速度</th>
+              <th>ランク</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Powered by 極〜GOKU〜生誕祭実行委員会（AI駆動）</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
