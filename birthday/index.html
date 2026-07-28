@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎈 誕生日祝福受付システム</title>
+  <meta name="description" content="DMを打つのが億劫な人のために、2タップで祝えるシステムを作りました。">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="balloons" aria-hidden="true"></div>
+  <canvas id="confettiCanvas" aria-hidden="true"></canvas>
+
+  <main>
+
+    <!-- ========== 受付画面 ========== -->
+    <section id="screenForm">
+      <header class="hero">
+        <p class="eyebrow">BIRTHDAY WISH INTAKE SYSTEM <span class="ver">v1.0</span></p>
+        <h1>🎈<br><span id="personName">KOKI</span> 、<br>本日 誕生日です</h1>
+        <p class="lede">
+          DMを打つのが億劫な人のために、<b>2タップで祝えるシステム</b>を作りました。<br>
+          <span class="lede-metric">実測平均所要時間 <b id="avgSecInline">—</b> 秒</span>
+        </p>
+      </header>
+
+      <div class="card">
+        <div class="field">
+          <label for="handle">あなたのInstagram</label>
+          <div class="handle-input">
+            <span class="at">@</span>
+            <input type="text" id="handle" list="handleList" placeholder="username"
+                   autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40">
+          </div>
+          <datalist id="handleList"></datalist>
+          <p class="micro">本名は不要です。一度入れたら次回から自動で入ります。</p>
+        </div>
+
+        <div class="field">
+          <label>メッセージ<span class="tag">タップで選ぶだけ</span></label>
+          <div class="chips" id="chips"></div>
+          <input type="text" id="message" placeholder="自由入力もできます" maxlength="200">
+        </div>
+
+        <button id="submitBtn" class="btn-main">🎉 祝福を送信する</button>
+        <p class="micro center">送信すると、あなた専用の相性分析が生成されます</p>
+      </div>
+
+      <p class="footnote">このページはAIと一緒に1日で作られました</p>
+    </section>
+
+    <!-- ========== 解析画面 ========== -->
+    <section id="screenAnalyzing" hidden>
+      <div class="card analyzing">
+        <div class="spinner"></div>
+        <h2>解析中</h2>
+        <ul class="steps" id="analysisSteps"></ul>
+      </div>
+    </section>
+
+    <!-- ========== 結果画面 ========== -->
+    <section id="screenResult" hidden>
+
+      <div class="card result-head">
+        <p class="eyebrow">受付番号 <b id="receiptNo">#—</b> / 受付完了</p>
+        <h2>祝福を受理しました 🎉</h2>
+        <p class="thanks"><b id="resultHandle">@you</b> さん、ありがとう。</p>
+      </div>
+
+      <!-- 工数削減レポート -->
+      <div class="card">
+        <h3>⏱ 工数削減レポート</h3>
+        <div class="saving">
+          <div class="saving-row">
+            <span class="saving-label">DMを書く場合（推定）</span>
+            <span class="saving-bar"><i style="width:100%"></i></span>
+            <span class="saving-val">90.0秒</span>
+          </div>
+          <div class="saving-row is-actual">
+            <span class="saving-label">このシステム（実測）</span>
+            <span class="saving-bar"><i id="savingBar" style="width:4%"></i></span>
+            <span class="saving-val" id="elapsedVal">—</span>
+          </div>
+        </div>
+        <p class="saving-total">削減率 <b id="savingRate">—</b></p>
+      </div>
+
+      <!-- 相性分析 -->
+      <div class="card">
+        <h3>🧠 相性分析結果</h3>
+        <div class="score-wrap">
+          <div class="score-ring" id="scoreRing">
+            <span class="score-num" id="scoreNum">—</span>
+            <span class="score-unit">%</span>
+          </div>
+          <p class="score-caption">相性スコア</p>
+        </div>
+        <dl class="analysis">
+          <div><dt>あなたのタイプ</dt><dd id="personaVal">—</dd></div>
+          <div><dt>関係性フェーズ</dt><dd id="phaseVal">—</dd></div>
+          <div><dt>祝福の熱量指数</dt><dd id="heatVal">—</dd></div>
+        </dl>
+        <p class="ai-comment" id="aiComment"></p>
+      </div>
+
+      <!-- 証明書 -->
+      <div class="card cert-card">
+        <h3>🏆 祝福証明書</h3>
+        <canvas id="certCanvas" width="1080" height="1920"></canvas>
+        <button id="downloadBtn" class="btn-sub">📥 画像を保存する</button>
+        <p class="micro center">ストーリーに貼ると、あなたの分析結果が晒されます</p>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-row">
+        <div class="card kpi">
+          <span class="kpi-label">累計祝福数</span>
+          <span class="kpi-value" id="kpiCount">—</span>
+        </div>
+        <div class="card kpi">
+          <span class="kpi-label">平均所要時間</span>
+          <span class="kpi-value" id="kpiAvg">—</span>
+          <span class="kpi-sub">秒</span>
+        </div>
+        <div class="card kpi">
+          <span class="kpi-label">最速記録</span>
+          <span class="kpi-value" id="kpiBest">—</span>
+          <span class="kpi-sub">秒</span>
+        </div>
+      </div>
+
+      <!-- ウォール -->
+      <div class="card">
+        <h3>💬 祝福ウォール</h3>
+        <ul class="wall" id="wall"></ul>
+        <p class="micro center" id="wallNote"></p>
+      </div>
+
+      <p class="footnote">このページはAIと一緒に1日で作られました</p>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
